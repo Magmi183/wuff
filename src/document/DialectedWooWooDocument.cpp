@@ -4,7 +4,6 @@
 
 #include "DialectedWooWooDocument.h"
 #include <algorithm>
-#include "../dialect/DialectManager.h"
 #include "../utils/utils.h"
 
 DialectedWooWooDocument::DialectedWooWooDocument(const fs::path &documentPath1, Parser *parser1,

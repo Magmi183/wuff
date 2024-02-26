@@ -6,7 +6,7 @@
 #define WUFF_DIALECT_H
 
 
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 #include <string>
 #include <vector>
 #include <memory>

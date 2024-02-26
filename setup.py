@@ -22,7 +22,7 @@ PLAT_TO_CMAKE = {
 # The name must be the _single_ output extension from the CMake build.
 # If you need multiple extensions, see scikit-build.
 class CMakeExtension(Extension):
-    def __init__(self, name: str, sourcedir: str = "") -> None:
+    def __init__(self, name: str, sourcedir: str = "src/") -> None:
         super().__init__(name, sources=[])
         self.sourcedir = os.fspath(Path(sourcedir).resolve())
 
@@ -132,7 +132,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="wuff",
-    version="1.0.6",
+    version="1.0.7",
     author="Michal Janecek",
     author_email="michal.janecek@gmail.com",
     description="Analyzer tools for WooWoo projects",

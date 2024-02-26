@@ -9,7 +9,7 @@
 #include <vector>
 #include "Reference.h"  
 #include "MetaBlock.h" 
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
 class Shorthand {
 public:

@@ -3,7 +3,7 @@
 //
 
 #include "DialectManager.h"
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
 DialectManager::DialectManager(const std::string &dialectFilePath) {
     if (!dialectFilePath.empty()) {

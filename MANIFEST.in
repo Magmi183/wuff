@@ -1,3 +1,5 @@
-recursive-include wuff *
-prune wuff/cmake_*
-prune wuff/.idea
+include README.md
+include pyproject.toml
+include setup.py
+recursive-include src *
+recursive-include tests *

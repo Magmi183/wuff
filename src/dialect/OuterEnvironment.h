@@ -2,22 +2,22 @@
 // Created by Michal Janecek on 27.01.2024.
 //
 
-#ifndef DOCUMENTPART_H
-#define DOCUMENTPART_H
+#ifndef OUTERENVIRONMENT_H
+#define OUTERENVIRONMENT_H
 
 #include <string>
 #include "MetaBlock.h"
 #include "IDescribable.h"
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
-class DocumentPart : public IDescribable {
+class OuterEnvironment : public IDescribable {
 public:
     std::string name;
     std::string description;
     MetaBlock metaBlock;
 
-    DocumentPart() = default;
-    DocumentPart(std::string  name, std::string  description, MetaBlock  metaBlock = MetaBlock());
+    OuterEnvironment() = default;
+    OuterEnvironment(std::string  name, std::string  description, MetaBlock  metaBlock = MetaBlock());
     void deserialize(const YAML::Node& node);
 
     std::string getDescription() const override {
@@ -27,7 +27,7 @@ public:
     std::string getName() const override {
         return name;
     }
-
+    
 };
 
-#endif // DOCUMENTPART_H
+#endif // OUTERENVIRONMENT_H

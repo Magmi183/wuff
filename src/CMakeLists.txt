@@ -38,12 +38,12 @@ if (NOT tree_sitter_POPULATED)
 endif ()
 
 # Tree-Sitter WooWoo
-set(WOOWOO_PARSER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/tree-sitter/woowoo/parser.c)
-set(WOOWOO_SCANNER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/tree-sitter/woowoo/scanner.cc)
+set(WOOWOO_PARSER_SRC tree-sitter/woowoo/parser.c)
+set(WOOWOO_SCANNER_SRC tree-sitter/woowoo/scanner.cc)
 
 # Tree-Sitter YAML
-set(YAML_PARSER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/tree-sitter/yaml/parser.c)
-set(YAML_SCANNER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/tree-sitter/yaml/scanner.cc)
+set(YAML_PARSER_SRC tree-sitter/yaml/parser.c)
+set(YAML_SCANNER_SRC tree-sitter/yaml/scanner.cc)
 
 # - - - - -
 

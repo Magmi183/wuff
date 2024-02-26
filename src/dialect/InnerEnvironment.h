@@ -11,7 +11,7 @@
 #include "Reference.h"  
 #include "MetaBlock.h"
 #include "IDescribable.h"
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
 class InnerEnvironment : public IDescribable {
 public:

@@ -7,7 +7,7 @@
 
 #include <string>
 #include <functional>  // For std::hash
-#include <yaml-cpp/yaml.h>
+#include "yaml-cpp/yaml.h"
 
 
 class Reference {
