@@ -14,7 +14,7 @@ class DialectManager {
 private:
     template<typename T>
     std::string scanForDescriptionByName(const std::vector<std::shared_ptr<T> > &describables, const std::string &name);
-    void extractReferences(const MetaBlock& mb, std::vector<Reference> & target) const;
+    static void extractReferences(const MetaBlock& mb, std::vector<Reference> & target) ;
     void extractReferencingMetaFieldNames(std::vector<std::string> & names);
     
     void buildMaps();

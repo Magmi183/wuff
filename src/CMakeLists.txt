@@ -75,8 +75,7 @@ pybind11_add_module(${PROJECT_NAME} NO_EXTRAS
         dialect/Field.cpp
         dialect/Shorthand.cpp
         dialect/Reference.cpp
-        dialect/InnerEnvironment.cpp
-        dialect/OuterEnvironment.cpp
+        dialect/Environment.cpp
         dialect/Wobject.cpp
         components/Component.cpp
         components/Hoverer.cpp
@@ -113,8 +112,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
             dialect/Field.cpp
             dialect/Shorthand.cpp
             dialect/Reference.cpp
-            dialect/InnerEnvironment.cpp
-            dialect/OuterEnvironment.cpp
+            dialect/Environment.cpp
             dialect/Wobject.cpp
             components/Component.cpp
             components/Hoverer.cpp

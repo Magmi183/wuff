@@ -92,7 +92,8 @@ void Completer::completeInnerEnvs(std::vector<CompletionItem> &completionItems, 
     auto document = analyzer->getDocumentByUri(params.textDocument.uri);
 
     TSQueryCursor *cursor = ts_query_cursor_new();
-    TSPoint start_point = {params.position.line, params.position.character};
+    auto start = params.position.character - 2 > 0 ? params.position.character - 2 : 0;
+    TSPoint start_point = {params.position.line, start};
     TSPoint end_point = {params.position.line, params.position.character + 1};
     ts_query_cursor_set_point_range(cursor, start_point, end_point);
     ts_query_cursor_exec(cursor, queries[shortInnerEnvironmentQuery], ts_tree_root_node(document->tree));

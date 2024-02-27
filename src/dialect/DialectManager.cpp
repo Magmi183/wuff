@@ -26,12 +26,12 @@ void DialectManager::processDialect() {
 
 void DialectManager::buildMaps() {
     // process all possible queries in advance, for fast live lookups
-    
+
     // References by type name - start
     // note: if there are two different types with the same name, their references will get merged
     for (std::string &referencingTypeName: getReferencingTypeNames()) {
         auto &rbtn = referencesByTypeName[referencingTypeName]; // create the key
-        for (const std::shared_ptr<InnerEnvironment> &ie: activeDialect->inner_environments) {
+        for (const std::shared_ptr<Environment> &ie: activeDialect->environments) {
             if (ie->name == referencingTypeName) {
                 rbtn.insert(rbtn.end(),
                             ie->references.begin(), ie->references.end());
@@ -73,13 +73,9 @@ void DialectManager::buildMaps() {
 std::string DialectManager::getDescription(const std::string &type, const std::string &name) {
     std::string description;
 
-    if (type == "outer_environment_type") {
-        description = scanForDescriptionByName(activeDialect->classic_outer_environments, name);
-        if (description.empty()) {
-            description = scanForDescriptionByName(activeDialect->fragile_outer_environments, name);
-        }
-    } else if (type == "short_inner_environment_type" || type == "verbose_inner_environment_type") {
-        description = scanForDescriptionByName(activeDialect->inner_environments, name);
+    if (type == "outer_environment_type" || type == "short_inner_environment_type" ||
+        type == "verbose_inner_environment_type") {
+        description = scanForDescriptionByName(activeDialect->environments, name);
     } else if (type == "document_part_type") {
         description = scanForDescriptionByName(activeDialect->document_parts, name);
     } else if (type == "wobject_type") {
@@ -103,21 +99,12 @@ std::string DialectManager::scanForDescriptionByName(const std::vector<std::shar
 }
 
 void DialectManager::collectReferencesAndMetas() {
-    for (const std::shared_ptr<InnerEnvironment> &ie: activeDialect->inner_environments) {
-        allReferences.insert(allReferences.end(), ie->references.begin(), ie->references.end());
-        extractReferences(ie->metaBlock, allReferences);
-        metaBlocks.push_back(ie->metaBlock);
+    for (const std::shared_ptr<Environment> &env: activeDialect->environments) {
+        allReferences.insert(allReferences.end(), env->references.begin(), env->references.end());
+        extractReferences(env->metaBlock, allReferences);
+        metaBlocks.push_back(env->metaBlock);
     }
 
-    for (const std::shared_ptr<OuterEnvironment> &coe: activeDialect->classic_outer_environments) {
-        extractReferences(coe->metaBlock, allReferences);
-        metaBlocks.push_back(coe->metaBlock);
-    }
-
-    for (const std::shared_ptr<OuterEnvironment> &foe: activeDialect->fragile_outer_environments) {
-        extractReferences(foe->metaBlock, allReferences);
-        metaBlocks.push_back(foe->metaBlock);
-    }
 
     for (const std::shared_ptr<DocumentPart> &dp: activeDialect->document_parts) {
         extractReferences(dp->metaBlock, allReferences);
@@ -135,7 +122,7 @@ void DialectManager::collectReferencesAndMetas() {
     metaBlocks.push_back(activeDialect->shorthand_hash->metaBlock);
 }
 
-void DialectManager::extractReferences(const MetaBlock &mb, std::vector<Reference> &target) const {
+void DialectManager::extractReferences(const MetaBlock &mb, std::vector<Reference> &target) {
     for (auto field: mb.optionalFields) {
         target.insert(target.end(), field.references.begin(), field.references.end());
     }
@@ -147,9 +134,9 @@ void DialectManager::extractReferences(const MetaBlock &mb, std::vector<Referenc
 std::vector<std::string> DialectManager::getReferencingTypeNames() {
     std::vector<std::string> names;
 
-    for (const std::shared_ptr<InnerEnvironment> &ie: activeDialect->inner_environments) {
-        if (!ie->references.empty()) {
-            names.push_back(ie->name);
+    for (const std::shared_ptr<Environment> &env: activeDialect->environments) {
+        if (!env->references.empty()) {
+            names.push_back(env->name);
         }
     }
 

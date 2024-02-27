@@ -33,33 +33,15 @@ void Dialect::deserialize(const YAML::Node& node) {
         }
     }
 
-    // Deserialize Classic Outer Environments
-    if (node["outer_environments"]["classic"]) {
-        for (const auto& oeNode : node["outer_environments"]["classic"]) {
-            auto oe = std::make_shared<OuterEnvironment>();
-            oe->deserialize(oeNode);
-            classic_outer_environments.push_back(std::move(oe));
+    // Deserialize Environments
+    if (node["environments"]) {
+        for (const auto & envNode: node["environments"]) {
+            auto environment = std::make_shared<Environment>();
+            environment->deserialize(envNode);
+            environments.push_back(std::move(environment));
         }
     }
-
-    // Deserialize Fragile Outer Environments
-    if (node["outer_environments"]["fragile"]) {
-        for (const auto& oeNode : node["outer_environments"]["fragile"]) {
-            auto oe = std::make_shared<OuterEnvironment>();
-            oe->deserialize(oeNode);
-            fragile_outer_environments.push_back(std::move(oe));
-        }
-    }
-
-    // Deserialize Inner Environments
-    if (node["inner_environments"]) {
-        for (const auto& ieNode : node["inner_environments"]) {
-            auto ie = std::make_shared<InnerEnvironment>();
-            ie->deserialize(ieNode);
-            inner_environments.push_back(std::move(ie));
-        }
-    }
-
+    
     // Deserialize Shorthands
     if (node["shorthands"]["hash"]) {
         shorthand_hash = std::make_shared<Shorthand>();

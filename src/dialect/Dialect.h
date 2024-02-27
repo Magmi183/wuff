@@ -13,8 +13,7 @@
 
 #include "DocumentPart.h"
 #include "Wobject.h"
-#include "OuterEnvironment.h"
-#include "InnerEnvironment.h"
+#include "Environment.h"
 #include "Shorthand.h"
 
 class Dialect {
@@ -27,9 +26,7 @@ public:
 
     std::vector<std::shared_ptr<DocumentPart>> document_parts;
     std::vector<std::shared_ptr<Wobject>> wobjects;
-    std::vector<std::shared_ptr<OuterEnvironment>> classic_outer_environments;
-    std::vector<std::shared_ptr<OuterEnvironment>> fragile_outer_environments;
-    std::vector<std::shared_ptr<InnerEnvironment>> inner_environments;
+    std::vector<std::shared_ptr<Environment>> environments;
 
     std::shared_ptr<Shorthand> shorthand_hash;
     std::shared_ptr<Shorthand> shorthand_at;

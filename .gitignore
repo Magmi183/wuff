@@ -187,3 +187,4 @@ fabric.properties
 main.cpp
 wuff/test.py
 **/.DS_Store
+**/*.so
