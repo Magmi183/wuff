@@ -54,6 +54,8 @@ public:
     std::vector<int> semanticTokens(const std::string& docUri);
     Location goToDefinition(const DefinitionParams& params);
     std::vector<CompletionItem> complete(const CompletionParams & params);
+    std::vector<Location> references(const ReferenceParams & params);
+    WorkspaceEdit rename(const RenameParams & params);
     std::vector<Diagnostic> diagnose(const TextDocumentIdentifier & tdi); 
     std::vector<FoldingRange> foldingRanges(const TextDocumentIdentifier & tdi);
     

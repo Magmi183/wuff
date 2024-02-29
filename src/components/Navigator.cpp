@@ -12,6 +12,33 @@ Navigator::Navigator(WooWooAnalyzer *analyzer) : Component(analyzer) {
     prepareQueries();
 }
 
+// - - REFERENCES
+
+std::vector<Location> Navigator::references(const ReferenceParams &params) {
+    auto document = analyzer->getDocumentByUri(params.textDocument.uri);
+    auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
+    uint32_t line = pos.first;
+    uint32_t character = pos.second;
+    std::vector<Location> locations;
+  
+    
+    
+    return locations;
+    
+}
+
+// - - RENAME
+
+WorkspaceEdit Navigator::rename(const RenameParams &params) {
+    auto document = analyzer->getDocumentByUri(params.textDocument.uri);
+    auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
+    uint32_t line = pos.first;
+    uint32_t character = pos.second;
+    
+    
+}
+
+// - - GO TO DEFINITION
 Location Navigator::goToDefinition(const DefinitionParams &params) {
     auto document = analyzer->getDocumentByUri(params.textDocument.uri);
     auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);

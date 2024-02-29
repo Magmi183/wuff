@@ -17,6 +17,8 @@ public:
     explicit Navigator(WooWooAnalyzer * analyzer);
 
     Location goToDefinition(const DefinitionParams & params);
+    std::vector<Location> references(const ReferenceParams & params);
+    WorkspaceEdit rename(const RenameParams & params);
 
 private:
     Location navigateToFile(const DefinitionParams &params, const std::string & relativeFilePath);

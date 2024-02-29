@@ -192,6 +192,14 @@ Location WooWooAnalyzer::goToDefinition(const DefinitionParams& params) {
     return navigator->goToDefinition(params);
 }
 
+std::vector<Location> WooWooAnalyzer::references(const ReferenceParams &params) {
+    return navigator->references(params);
+}
+
+WorkspaceEdit WooWooAnalyzer::rename(const RenameParams &params) {
+    return navigator->rename(params);
+}
+
 std::vector<CompletionItem> WooWooAnalyzer::complete(const CompletionParams &params) {
     return completer->complete(params);
 }

@@ -20,6 +20,8 @@ PYBIND11_MODULE(wuff, m) {
             .def("semantic_tokens", &WooWooAnalyzer::semanticTokens)
             .def("go_to_definition", &WooWooAnalyzer::goToDefinition)
             .def("complete", &WooWooAnalyzer::complete)
+            .def("references", &WooWooAnalyzer::references)
+            .def("rename", &WooWooAnalyzer::rename)
             .def("folding_ranges", &WooWooAnalyzer::foldingRanges)
             .def("document_did_change", &WooWooAnalyzer::documentDidChange)
             .def("open_document", &WooWooAnalyzer::openDocument)
@@ -97,6 +99,23 @@ PYBIND11_MODULE(wuff, m) {
             .def_readwrite("insertTextFormat", &CompletionItem::insertTextFormat)
             .def_readwrite("insertText", &CompletionItem::insertText);
 
+    py::class_<ReferenceParams, TextDocumentPositionParams>(m, "ReferenceParams")
+            .def(py::init<const TextDocumentIdentifier&, const Position&, bool>());
+    
+    py::class_<RenameParams, TextDocumentPositionParams>(m, "RenameParams")
+            .def(py::init<const TextDocumentIdentifier&, const Position&, std::string>());
+
+    py::class_<TextEdit>(m, "TextEdit")
+            .def(py::init<Range, std::string>())
+            .def_readwrite("range", &TextEdit::range)
+            .def_readwrite("new_text", &TextEdit::newText);
+
+    py::class_<WorkspaceEdit>(m, "WorkspaceEdit")
+            .def(py::init<>())
+            .def("add_change", &WorkspaceEdit::add_change)
+            // The changes map can be accessed directly from Python as a dictionary.
+            .def_readwrite("changes", &WorkspaceEdit::changes);
+    
     py::enum_<DiagnosticSeverity>(m, "DiagnosticSeverity")
             .value("Error", DiagnosticSeverity::Error)
             .value("Warning", DiagnosticSeverity::Warning)

@@ -21,7 +21,7 @@ struct Location {
     std::string uri;
     Range range;
 
-    Location(std::string uri, Range range) : uri(std::move(uri)), range(range){}
+    Location(std::string uri, Range range) : uri(std::move(uri)), range(range) {}
 };
 
 struct TextDocumentIdentifier {
@@ -53,7 +53,8 @@ struct CompletionContext {
     CompletionTriggerKind triggerKind;
     std::optional<std::string> triggerCharacter;
 
-    explicit CompletionContext(CompletionTriggerKind triggerKind, std::optional<std::string> triggerCharacter = std::nullopt)
+    explicit CompletionContext(CompletionTriggerKind triggerKind,
+                               std::optional<std::string> triggerCharacter = std::nullopt)
             : triggerKind(triggerKind), triggerCharacter(std::move(triggerCharacter)) {}
 };
 
@@ -61,10 +62,10 @@ struct CompletionContext {
 struct CompletionParams : public TextDocumentPositionParams {
     std::optional<CompletionContext> context; // Context is optional
 
-    CompletionParams(const TextDocumentIdentifier& textDocument, const Position& position, std::optional<CompletionContext> context = std::nullopt)
+    CompletionParams(const TextDocumentIdentifier &textDocument, const Position &position,
+                     std::optional<CompletionContext> context = std::nullopt)
             : TextDocumentPositionParams(textDocument, position), context(std::move(context)) {}
 };
-
 
 enum class CompletionItemKind {
     Text = 1,
@@ -100,17 +101,52 @@ enum class InsertTextFormat {
 };
 
 struct CompletionItem {
-    std::string label; 
-    std::optional<CompletionItemKind> kind; 
-    std::optional<InsertTextFormat> insertTextFormat; 
-    std::optional<std::string> insertText; 
-    
+    std::string label;
+    std::optional<CompletionItemKind> kind;
+    std::optional<InsertTextFormat> insertTextFormat;
+    std::optional<std::string> insertText;
+
     explicit CompletionItem(std::string label, std::optional<CompletionItemKind> kind = std::nullopt,
-                   std::optional<InsertTextFormat> insertTextFormat = std::nullopt,
-                   std::optional<std::string> insertText = std::nullopt)
-            : label(std::move(label)), kind(kind), insertTextFormat(insertTextFormat), insertText(std::move(insertText)) {}
+                            std::optional<InsertTextFormat> insertTextFormat = std::nullopt,
+                            std::optional<std::string> insertText = std::nullopt)
+            : label(std::move(label)), kind(kind), insertTextFormat(insertTextFormat),
+              insertText(std::move(insertText)) {}
 };
 
+
+struct ReferenceParams: public TextDocumentPositionParams {
+    bool includeDeclaration;
+
+    ReferenceParams(const TextDocumentIdentifier &textDocument, const Position &position, bool includeDeclaration)
+            : TextDocumentPositionParams(textDocument, position), includeDeclaration(std::move(includeDeclaration)) {}
+    
+};
+
+struct RenameParams : public TextDocumentPositionParams {
+    std::string newName;
+
+    RenameParams(const TextDocumentIdentifier &textDocument, const Position &position, std::string newName)
+            : TextDocumentPositionParams(textDocument, position), newName(std::move(newName)) {}
+};
+
+
+struct TextEdit {
+    Range range;
+
+    std::string newText;
+
+    TextEdit(Range range, std::string newText)
+            : range(std::move(range)), newText(std::move(newText)) {}
+};
+
+struct WorkspaceEdit {
+    // The key is the file URI
+    std::unordered_map<std::string, std::vector<TextEdit>> changes;
+
+    void add_change(const std::string& uri, const TextEdit& textEdit) {
+        changes[uri].push_back(textEdit);
+    }
+};
 
 enum class DiagnosticSeverity {
     Error = 1,
@@ -139,8 +175,8 @@ struct FoldingRange {
 
     FoldingRange(uint32_t startLine, uint32_t startCharacter, uint32_t endLine, uint32_t endCharacter,
                  std::string foldingRangeKind) : startLine(startLine), startCharacter(startCharacter),
-                                                        endLine(endLine), endCharacter(endCharacter),
-                                                        foldingRangeKind(std::move(foldingRangeKind)) {}
+                                                 endLine(endLine), endCharacter(endCharacter),
+                                                 foldingRangeKind(std::move(foldingRangeKind)) {}
 };
 
 #endif //WUFF_LSPTYPES_H
