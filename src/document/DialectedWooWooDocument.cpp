@@ -91,7 +91,6 @@ void DialectedWooWooDocument::prepareQueries() {
 
 }
 
-
 std::vector<std::pair<MetaContext *, TSNode> > DialectedWooWooDocument::getReferencablesBy(
         const std::string &referencingTypeName) {
     auto refTypes = dialectManager->getReferencingTypeNames();
@@ -111,6 +110,78 @@ DialectedWooWooDocument::findReferencable(const std::vector<Reference> &referenc
     }
 
     return std::nullopt;
+}
+
+std::vector<Location>
+DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, const std::string &referenceValue) {
+
+    std::vector<Location> locations;
+
+    // need to search for possible references in all meta block and environments
+    // this is done on-the-fly and thus take some time, as this operation should not occure very often
+
+    // SEARCH FOR REFERENCES FROM META-BLOCKS (example --> "ref: chapter-01")
+    for (MetaContext *mx: metaBlocks) {
+        TSQueryCursor *wooCursor = ts_query_cursor_new();
+        ts_query_cursor_exec(wooCursor, fieldQuery, ts_tree_root_node(mx->tree));
+
+        TSQueryMatch match;
+        while (ts_query_cursor_next_match(wooCursor, &match)) {
+            TSNode valueNode;
+            bool correctKey = false;
+            bool correctValue = false;
+            for (uint32_t i = 0; i < match.capture_count; ++i) {
+                uint32_t capture_index = match.captures[i].index;
+                TSNode capturedNode = match.captures[i].node;
+
+                uint32_t valueCaptureName;
+                const char *valueCaptureNameChars = ts_query_capture_name_for_id(
+                        fieldQuery, capture_index, &valueCaptureName);
+                std::string valueCaptureNameStr(valueCaptureNameChars, valueCaptureName);
+
+                if (valueCaptureNameStr == "value") {
+                    if (getMetaNodeText(mx, capturedNode) == referenceValue) {
+                        // the field value is what we want
+                        correctValue = true;
+                    } else {
+                        break;
+                    }
+                    valueNode = capturedNode;
+                } else if (valueCaptureNameStr == "key") {
+                    auto metaFieldKey = getMetaNodeText(mx, capturedNode);
+
+                    for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName(metaFieldKey)) {
+                        if (ref.metaKey == reference.metaKey) {
+                            correctKey = true;
+                        }
+                    }
+
+                }
+            }
+            if (!correctKey || !correctValue) continue;
+            auto s = ts_node_start_point(valueNode);
+            auto e = ts_node_end_point(valueNode);
+            Location l = {utils::pathToUri(documentPath), Range{{s.row + mx->lineOffset, s.column},
+                                                                {e.row + mx->lineOffset, e.column}}};
+            locations.emplace_back(l);
+
+        }
+        ts_query_cursor_delete(wooCursor);
+
+    }
+
+    // SEARCH FOR REFERENCES FROM SHORT INNER ENVIRONMETS (example --> ".reference:chapter-01")
+
+
+
+
+    // SEARCH FOR REFERENCES FROM SHORTHANDS (example --> "See Chapter 1"#chapter-01")
+
+
+
+
+    return locations;
+
 }
 
 

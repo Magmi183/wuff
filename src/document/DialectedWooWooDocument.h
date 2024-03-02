@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <optional>
 #include "tree_sitter/api.h"
+#include "../lsp/LSPTypes.h"
 
 namespace fs = std::filesystem;
 
@@ -24,6 +25,9 @@ public:
     void updateSource(std::string &source) override;
 
     std::optional<std::pair<MetaContext *, TSNode>> findReferencable(const std::vector<Reference> & references, const std::string & referenceValue);
+    
+    std::vector<Location> findLocationsOfReferences(const Reference & reference, const std::string & referenceValue);
+    
     DialectManager * dialectManager;
     
 

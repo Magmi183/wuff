@@ -19,12 +19,58 @@ std::vector<Location> Navigator::references(const ReferenceParams &params) {
     auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
     uint32_t line = pos.first;
     uint32_t character = pos.second;
+
+    TSQueryCursor *cursor = ts_query_cursor_new();
+    TSPoint start_point = {line, character};
+    TSPoint end_point = {line, character + 1};
+    ts_query_cursor_set_point_range(cursor, start_point, end_point);
+    ts_query_cursor_exec(cursor, queries[findReferencesQuery], ts_tree_root_node(document->tree));
+
+    TSQueryMatch match;
+    std::string nodeType;
+    std::string nodeText;
+    if (ts_query_cursor_next_match(cursor, &match)) {
+        if (match.capture_count > 0) {
+            TSNode node = match.captures[0].node;
+
+            nodeType = ts_node_type(node);
+            nodeText = document->getNodeText(node);
+
+            if (nodeType == "meta_block") {
+                return findMetaBlockReferences(params);
+            }
+
+        }
+    }
+
+    return {};
+
+}
+
+std::vector<Location> Navigator::findMetaBlockReferences(const ReferenceParams &params) {
     std::vector<Location> locations;
-  
-    
-    
-    return locations;
-    
+
+    auto metaField = extractMetaFieldKeyValue(params.textDocument, params.position);
+    if (metaField.has_value()) {
+        auto document = analyzer->getDocumentByUri(params.textDocument.uri);
+        searchProjectForReferences(locations, document, Reference(metaField->first), metaField->second);
+        return locations;
+    } else {
+        return {};
+
+    }
+
+}
+
+void
+Navigator::searchProjectForReferences(std::vector<Location> &locations, WooWooDocument *doc, const Reference &reference,
+                                      const std::string &referenceValue) {
+
+    for (auto projectDocument: analyzer->getDocumentsFromTheSameProject(doc)) {
+        for (auto ref: projectDocument->findLocationsOfReferences(reference, referenceValue)) {
+            locations.emplace_back(ref);
+        }
+    }
 }
 
 // - - RENAME
@@ -34,8 +80,8 @@ WorkspaceEdit Navigator::rename(const RenameParams &params) {
     auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
     uint32_t line = pos.first;
     uint32_t character = pos.second;
-    
-    
+
+
 }
 
 // - - GO TO DEFINITION
@@ -74,7 +120,7 @@ Location Navigator::goToDefinition(const DefinitionParams &params) {
                 return resolveShorthandReference("@", params, node);
             }
             if (nodeType == "meta_block") {
-                return resolveMetaBlockReference(params, node);
+                return resolveMetaBlockReference(params);
             }
 
         }
@@ -116,9 +162,10 @@ Navigator::resolveShorthandReference(const std::string &shorthandType, const Def
 }
 
 
-Location Navigator::resolveMetaBlockReference(const DefinitionParams &params, TSNode node) {
-    auto document = analyzer->getDocumentByUri(params.textDocument.uri);
-    auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
+std::optional<std::pair<std::string, std::string>>
+Navigator::extractMetaFieldKeyValue(const TextDocumentIdentifier &tdi, const Position &p) {
+    auto document = analyzer->getDocumentByUri(tdi.uri);
+    auto pos = document->utfMappings->utf16ToUtf8(p.line, p.character);
     uint32_t line = pos.first;
     uint32_t character = pos.second;
     TSQueryCursor *cursor = ts_query_cursor_new();
@@ -149,14 +196,24 @@ Location Navigator::resolveMetaBlockReference(const DefinitionParams &params, TS
         }
         if (!metaFieldValue.empty() && !metaFieldName.empty()) {
             ts_query_cursor_delete(cursor);
-            return findReference(params, document->dialectManager->getPossibleReferencesByTypeName(metaFieldName),
-                                 metaFieldValue);
+            return std::make_pair(metaFieldName, metaFieldValue);
         }
     }
 
     ts_query_cursor_delete(cursor);
-    return Location("", Range{Position{0, 0}, Position{0, 0}});
+    return std::nullopt;
+}
 
+Location Navigator::resolveMetaBlockReference(const DefinitionParams &params) {
+    auto metaField = extractMetaFieldKeyValue(params.textDocument, params.position);
+    if (metaField.has_value()) {
+        auto document = analyzer->getDocumentByUri(params.textDocument.uri);
+        return findReference(params, document->dialectManager->getPossibleReferencesByTypeName(metaField->first),
+                             metaField->second);
+    } else {
+        return Location("", Range{Position{0, 0}, Position{0, 0}});
+
+    }
 }
 
 
@@ -191,6 +248,7 @@ const std::unordered_map<std::string, std::pair<TSLanguage *, std::string>> &Nav
 
 const std::string Navigator::metaFieldQuery = "metaFieldQuery";
 const std::string Navigator::goToDefinitionQuery = "goToDefinitionQuery";
+const std::string Navigator::findReferencesQuery = "findReferencesQuery";
 const std::unordered_map<std::string, std::pair<TSLanguage *, std::string>> Navigator::queryStringsByName = {
         {metaFieldQuery,      std::make_pair(tree_sitter_yaml(), MetaContext::metaFieldQueryString)},
         {goToDefinitionQuery, std::make_pair(tree_sitter_woowoo(),
@@ -199,6 +257,10 @@ const std::unordered_map<std::string, std::pair<TSLanguage *, std::string>> Navi
 (short_inner_environment) @type
 (verbose_inner_environment_hash_end) @type
 (verbose_inner_environment_at_end) @type
+(meta_block) @type
+)")},
+        {findReferencesQuery, std::make_pair(tree_sitter_woowoo(),
+                                             R"(
 (meta_block) @type
 )")}
 };
