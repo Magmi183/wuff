@@ -67,8 +67,9 @@ Navigator::searchProjectForReferences(std::vector<Location> &locations, WooWooDo
                                       const std::string &referenceValue) {
 
     for (auto projectDocument: analyzer->getDocumentsFromTheSameProject(doc)) {
-        for (auto ref: projectDocument->findLocationsOfReferences(reference, referenceValue)) {
-            locations.emplace_back(ref);
+        for (auto refLocation: projectDocument->findLocationsOfReferences(reference, referenceValue)) {
+            projectDocument->utfMappings->utf8ToUtf16(refLocation);
+            locations.emplace_back(refLocation);
         }
     }
 }
@@ -80,7 +81,7 @@ WorkspaceEdit Navigator::rename(const RenameParams &params) {
     auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
     uint32_t line = pos.first;
     uint32_t character = pos.second;
-
+    
 
 }
 

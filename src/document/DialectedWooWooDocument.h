@@ -37,6 +37,8 @@ private:
 
     void prepareQueries();
     TSQuery * fieldQuery;
+    const static std::string referencesQueryString;
+    TSQuery * referencesQuery;
     // given a typeName, get all nodes that can be referenced by that
     std::unordered_map<std::string, std::vector<std::pair<MetaContext *, TSNode>> > referencablesByNode;
     

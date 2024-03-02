@@ -16,6 +16,35 @@ DialectedWooWooDocument::DialectedWooWooDocument(const fs::path &documentPath1, 
 
 DialectedWooWooDocument::~DialectedWooWooDocument() {
     ts_query_delete(fieldQuery);
+    ts_query_delete(referencesQuery);
+}
+
+void DialectedWooWooDocument::prepareQueries() {
+    uint32_t errorOffset;
+    TSQueryError errorType;
+    fieldQuery = ts_query_new(
+            tree_sitter_yaml(),
+            MetaContext::metaFieldQueryString.c_str(),
+            MetaContext::metaFieldQueryString.size(),
+            &errorOffset,
+            &errorType
+    );
+
+    if (!fieldQuery) {
+        utils::reportQueryError("fieldQuery", errorOffset, errorType);
+    }
+
+    referencesQuery = ts_query_new(
+            tree_sitter_woowoo(),
+            referencesQueryString.c_str(),
+            referencesQueryString.size(),
+            &errorOffset,
+            &errorType
+    );
+
+    if (!referencesQuery) {
+        utils::reportQueryError("fieldQuery", errorOffset, errorType);
+    }
 }
 
 void DialectedWooWooDocument::index() {
@@ -72,24 +101,6 @@ void DialectedWooWooDocument::index() {
     }
 }
 
-
-void DialectedWooWooDocument::prepareQueries() {
-    uint32_t errorOffset;
-    TSQueryError errorType;
-    fieldQuery = ts_query_new(
-            tree_sitter_yaml(),
-            MetaContext::metaFieldQueryString.c_str(),
-            MetaContext::metaFieldQueryString.size(),
-            &errorOffset,
-            &errorType
-    );
-
-    if (!fieldQuery) {
-        utils::reportQueryError("fieldQuery", errorOffset, errorType);
-    }
-
-
-}
 
 std::vector<std::pair<MetaContext *, TSNode> > DialectedWooWooDocument::getReferencablesBy(
         const std::string &referencingTypeName) {
@@ -171,19 +182,77 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
     }
 
     // SEARCH FOR REFERENCES FROM SHORT INNER ENVIRONMETS (example --> ".reference:chapter-01")
-
-
-
-
     // SEARCH FOR REFERENCES FROM SHORTHANDS (example --> "See Chapter 1"#chapter-01")
 
+    TSQueryCursor *cursor = ts_query_cursor_new();
+    ts_query_cursor_exec(cursor, referencesQuery, ts_tree_root_node(tree));
 
+    TSQueryMatch match;
+    std::string nodeType;
+    std::string nodeText;
+    while (ts_query_cursor_next_match(cursor, &match)) {
+        if (match.capture_count > 0) {
+            TSNode node = match.captures[0].node;
+
+            nodeType = ts_node_type(node);
+            nodeText = getNodeText(node);
+            
+            auto s = ts_node_start_point(node);
+            auto e = ts_node_end_point(node);
+            if (nodeType == "short_inner_environment") {
+                auto value = utils::getChildText(node, "short_inner_environment_body", this);
+                if(value != referenceValue) continue;
+                auto shortInnerEnvironmentType = utils::getChildText(node, "short_inner_environment_type", this);
+
+                for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName(shortInnerEnvironmentType)) {
+                    if (ref.metaKey == reference.metaKey) {
+                        Location l = {utils::pathToUri(documentPath), Range{{s.row, s.column},
+                                                                            {e.row, e.column}}};
+                        locations.emplace_back(l);
+                        break;
+                    }
+                }
+                
+            }
+            if (nodeType == "verbose_inner_environment_hash_end") {
+                if(nodeText != referenceValue) continue;
+
+                for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName("#")) {
+                    if (ref.metaKey == reference.metaKey) {
+                        Location l = {utils::pathToUri(documentPath), Range{{s.row, s.column},
+                                                                            {e.row, e.column}}};
+                        locations.emplace_back(l);
+                        break;
+                    }
+                }
+            }
+            if (nodeType == "verbose_inner_environment_at_end") {
+                if(nodeText != referenceValue) continue;
+
+                for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName("@")) {
+                    if (ref.metaKey == reference.metaKey) {
+                        Location l = {utils::pathToUri(documentPath), Range{{s.row, s.column},
+                                                                            {e.row, e.column}}};
+                        locations.emplace_back(l);
+                        break;
+                    }
+                }
+            }
+            
+        }
+    }
 
 
     return locations;
 
 }
 
+// constructs besides metablock fields which could reference something
+const std::string DialectedWooWooDocument::referencesQueryString = R"(
+(short_inner_environment) @type
+(verbose_inner_environment_hash_end) @type
+(verbose_inner_environment_at_end) @type
+)";
 
 void DialectedWooWooDocument::updateSource(std::string &source) {
     WooWooDocument::updateSource(source);

@@ -12,14 +12,17 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include "../lsp/LSPTypes.h"
 
 class UTF8toUTF16Mapping {
 public:
     void buildMappings(const std::string& source);
 
-    std::pair<uint32_t, uint32_t> utf8ToUtf16(uint32_t lineNum, uint32_t utf8Offset) const;
+    [[nodiscard]] std::pair<uint32_t, uint32_t> utf8ToUtf16(uint32_t lineNum, uint32_t utf8Offset) const;
 
-    std::pair<uint32_t, uint32_t> utf16ToUtf8(uint32_t lineNum, uint32_t utf16Offset) const;
+    [[nodiscard]] std::pair<uint32_t, uint32_t> utf16ToUtf8(uint32_t lineNum, uint32_t utf16Offset) const;
+
+    void utf8ToUtf16(Location & loc) const;
 
 private:
     std::vector<std::unordered_map<int, int>> utf8ToUtf16Mappings;

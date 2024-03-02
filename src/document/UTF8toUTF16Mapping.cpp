@@ -104,3 +104,18 @@ std::pair<uint32_t, uint32_t> UTF8toUTF16Mapping::utf16ToUtf8(uint32_t lineNum, 
     // Return the original offset if the line number or utf16Offset is out of range or not found
     return {lineNum, utf16Offset};
 }
+
+void UTF8toUTF16Mapping::utf8ToUtf16(Location & loc) const{
+    auto startLine = loc.range.start.line;
+    auto startCol = loc.range.start.character;
+    auto endLine = loc.range.end.line;
+    auto endCol = loc.range.end.character;
+    
+    auto transStart = utf8ToUtf16(startLine, startCol);
+    auto transEnd = utf8ToUtf16(endLine, endCol);
+    
+    loc.range.start.line = transStart.first;
+    loc.range.start.character = transStart.second;
+    loc.range.end.line = transEnd.first;
+    loc.range.end.character = transEnd.second;
+}
