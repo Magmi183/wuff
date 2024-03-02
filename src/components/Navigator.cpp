@@ -50,10 +50,27 @@ std::vector<Location> Navigator::references(const ReferenceParams &params) {
 std::vector<Location> Navigator::findMetaBlockReferences(const ReferenceParams &params) {
     std::vector<Location> locations;
 
-    auto metaField = extractMetaFieldKeyValue(params.textDocument, params.position);
-    if (metaField.has_value()) {
+    auto metaFieldContext = extractMetaFieldKeyValue(params.textDocument, params.position);
+    if (metaFieldContext.has_value()) {
+
         auto document = analyzer->getDocumentByUri(params.textDocument.uri);
-        searchProjectForReferences(locations, document, Reference(metaField->first), metaField->second);
+        auto mx = metaFieldContext->first;
+        auto keyNode = metaFieldContext->second.first;
+        auto valueNode = metaFieldContext->second.second;
+
+        auto s = ts_node_start_point(valueNode);
+        auto e = ts_node_end_point(valueNode);
+
+        if (params.includeDeclaration) {
+
+            Location l = {utils::pathToUri(document->documentPath), Range{{s.row + mx->lineOffset, s.column},
+                                                                          {e.row + mx->lineOffset, e.column}}};
+            document->utfMappings->utf8ToUtf16(l);
+            locations.emplace_back(l);
+        }
+
+        searchProjectForReferences(locations, document, Reference(document->getMetaNodeText(mx, keyNode)),
+                                   document->getMetaNodeText(mx, valueNode));
         return locations;
     } else {
         return {};
@@ -81,7 +98,9 @@ WorkspaceEdit Navigator::rename(const RenameParams &params) {
     auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
     uint32_t line = pos.first;
     uint32_t character = pos.second;
-    
+
+    //ReferenceParams rp = ReferenceParams(params.textDocument)
+
 
 }
 
@@ -163,7 +182,7 @@ Navigator::resolveShorthandReference(const std::string &shorthandType, const Def
 }
 
 
-std::optional<std::pair<std::string, std::string>>
+std::optional<std::pair<MetaContext *, std::pair<TSNode, TSNode>>>
 Navigator::extractMetaFieldKeyValue(const TextDocumentIdentifier &tdi, const Position &p) {
     auto document = analyzer->getDocumentByUri(tdi.uri);
     auto pos = document->utfMappings->utf16ToUtf8(p.line, p.character);
@@ -179,8 +198,10 @@ Navigator::extractMetaFieldKeyValue(const TextDocumentIdentifier &tdi, const Pos
 
     TSQueryMatch match;
     while (ts_query_cursor_next_match(cursor, &match)) {
-        std::string metaFieldName;
-        std::string metaFieldValue;
+        TSNode metaFieldName;
+        TSNode metaFieldValue;
+        bool foundValue = false;
+        bool foundKey = false;
         for (uint32_t i = 0; i < match.capture_count; ++i) {
             TSNode capturedNode = match.captures[i].node;
             uint32_t capture_id = match.captures[i].index;
@@ -190,14 +211,16 @@ Navigator::extractMetaFieldKeyValue(const TextDocumentIdentifier &tdi, const Pos
                                                                           &capture_name_length);
             std::string capture_name(capture_name_chars, capture_name_length);
             if (capture_name == "key") {
-                metaFieldName = document->getMetaNodeText(mx, capturedNode);
+                foundValue = true;
+                metaFieldName = capturedNode;
             } else if (capture_name == "value") {
-                metaFieldValue = document->getMetaNodeText(mx, capturedNode);
+                foundKey = true;
+                metaFieldValue = capturedNode;
             }
         }
-        if (!metaFieldValue.empty() && !metaFieldName.empty()) {
+        if (foundKey && foundValue) {
             ts_query_cursor_delete(cursor);
-            return std::make_pair(metaFieldName, metaFieldValue);
+            return std::make_pair(mx, std::make_pair(metaFieldName, metaFieldValue));
         }
     }
 
@@ -206,11 +229,15 @@ Navigator::extractMetaFieldKeyValue(const TextDocumentIdentifier &tdi, const Pos
 }
 
 Location Navigator::resolveMetaBlockReference(const DefinitionParams &params) {
-    auto metaField = extractMetaFieldKeyValue(params.textDocument, params.position);
-    if (metaField.has_value()) {
+    auto metaFieldContext = extractMetaFieldKeyValue(params.textDocument, params.position);
+    if (metaFieldContext.has_value()) {
+        auto mx = metaFieldContext->first;
+        auto keyNode = metaFieldContext->second.first;
+        auto valueNode = metaFieldContext->second.second;
         auto document = analyzer->getDocumentByUri(params.textDocument.uri);
-        return findReference(params, document->dialectManager->getPossibleReferencesByTypeName(metaField->first),
-                             metaField->second);
+        return findReference(params, document->dialectManager->getPossibleReferencesByTypeName(
+                                     document->getMetaNodeText(mx, keyNode)),
+                             document->getMetaNodeText(mx, valueNode));
     } else {
         return Location("", Range{Position{0, 0}, Position{0, 0}});
 

@@ -34,7 +34,7 @@ private:
     Location findReference(const DefinitionParams &params, const std::vector<Reference> &possibleReferences,
                            const std::string &referencingValue);
 
-    std::optional<std::pair<std::string, std::string>>
+    std::optional<std::pair<MetaContext *, std::pair<TSNode, TSNode>>>
     extractMetaFieldKeyValue(const TextDocumentIdentifier &tdi, const Position &p);
 
     std::vector<Location> findMetaBlockReferences(const ReferenceParams &params);
