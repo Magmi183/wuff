@@ -4,6 +4,8 @@
 
 #include <string>
 #include <cstring>
+#include <fstream>
+#include <iostream>
 #include <tree_sitter/api.h>
 
 #include "../document/WooWooDocument.h"
@@ -35,7 +37,12 @@ namespace utils {
 
         path = percentDecode(path); // Decode any percent-encoded characters
 
-#ifdef _WIN32
+#ifdef __APPLE__
+        std::transform(path.begin(), path.end(), path.begin(), ::tolower);
+#endif
+
+
+        #ifdef _WIN32
         std::transform(path.begin(), path.end(), path.begin(), ::tolower);
         // Windows file URIs start with a '/', which should not be present in the final path
         // Additionally, we need to handle drive letters (e.g., 'C:/')
@@ -62,10 +69,21 @@ namespace utils {
             uri += pathStr;
         }
 #else
-    uri += documentPath.generic_string();
+        uri += documentPath.generic_string();
 #endif
 
         return uri;
+    }
+
+    std::optional<TSNode> getChild(TSNode node, const char *childType) {
+        uint32_t child_count = ts_node_child_count(node);
+        for (uint32_t i = 0; i < child_count; ++i) {
+            TSNode child = ts_node_child(node, i);
+            if (strcmp(ts_node_type(child), childType) == 0) {
+                return child;
+            }
+        }
+        return std::nullopt;
     }
 
 
@@ -105,4 +123,20 @@ namespace utils {
 
         throw std::runtime_error(errorMessage);
     }
+
+    void appendToLogFile(const std::string& message) {
+        std::ofstream logFile("log.txt", std::ios::app);
+
+        if (!logFile) {
+            std::cerr << "Failed to open log.txt for appending." << std::endl;
+            return;
+        }
+
+        // Append the message to the file with a newline
+        logFile << message << std::endl;
+
+        logFile.close();
+    }
+
+
 } // namespace utils

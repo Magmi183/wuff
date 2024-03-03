@@ -37,6 +37,7 @@ std::vector<Location> Navigator::references(const ReferenceParams &params) {
             nodeText = document->getNodeText(node);
 
             if (nodeType == "meta_block") {
+                // user executed Find All References on a meta-block
                 return findMetaBlockReferences(params);
             }
 
@@ -60,8 +61,8 @@ std::vector<Location> Navigator::findMetaBlockReferences(const ReferenceParams &
 
         auto s = ts_node_start_point(valueNode);
         auto e = ts_node_end_point(valueNode);
-
-        if (params.includeDeclaration) {
+        
+        if (params.includeDeclaration) { //TODO: Add condition - that the key can possibly be referenced (i.e. is it valid to to include this as a declaration?)
 
             Location l = {utils::pathToUri(document->documentPath), Range{{s.row + mx->lineOffset, s.column},
                                                                           {e.row + mx->lineOffset, e.column}}};
@@ -94,14 +95,18 @@ Navigator::searchProjectForReferences(std::vector<Location> &locations, WooWooDo
 // - - RENAME
 
 WorkspaceEdit Navigator::rename(const RenameParams &params) {
-    auto document = analyzer->getDocumentByUri(params.textDocument.uri);
-    auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
-    uint32_t line = pos.first;
-    uint32_t character = pos.second;
 
-    //ReferenceParams rp = ReferenceParams(params.textDocument)
+    // First, get all references of the symbol.
+    ReferenceParams rp = ReferenceParams(params.textDocument, params.position, true);
+    auto referencesLocations = references(rp);
 
+    WorkspaceEdit we;
+    for (const auto &refLoc: referencesLocations) {
+        TextEdit te = TextEdit(refLoc.range, params.newName);
+        we.add_change(refLoc.uri, te);
+    }
 
+    return we;
 }
 
 // - - GO TO DEFINITION

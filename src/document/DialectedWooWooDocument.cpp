@@ -197,11 +197,20 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
             nodeType = ts_node_type(node);
             nodeText = getNodeText(node);
             
-            auto s = ts_node_start_point(node);
-            auto e = ts_node_end_point(node);
             if (nodeType == "short_inner_environment") {
                 auto value = utils::getChildText(node, "short_inner_environment_body", this);
-                if(value != referenceValue) continue;
+                auto valueNodeOpt = utils::getChild(node, "short_inner_environment_body");
+                TSNode valueNode;
+                if(!valueNodeOpt.has_value()){
+                    continue;
+                } else {
+                    valueNode = valueNodeOpt.value();
+                }
+                
+                auto s = ts_node_start_point(valueNode);
+                auto e = ts_node_end_point(valueNode);
+                
+                if (value != referenceValue) continue;
                 auto shortInnerEnvironmentType = utils::getChildText(node, "short_inner_environment_type", this);
 
                 for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName(shortInnerEnvironmentType)) {
@@ -212,10 +221,12 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
                         break;
                     }
                 }
-                
+
             }
             if (nodeType == "verbose_inner_environment_hash_end") {
-                if(nodeText != referenceValue) continue;
+                auto s = ts_node_start_point(node);
+                auto e = ts_node_end_point(node);
+                if (nodeText != referenceValue) continue;
 
                 for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName("#")) {
                     if (ref.metaKey == reference.metaKey) {
@@ -227,7 +238,9 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
                 }
             }
             if (nodeType == "verbose_inner_environment_at_end") {
-                if(nodeText != referenceValue) continue;
+                auto s = ts_node_start_point(node);
+                auto e = ts_node_end_point(node);
+                if (nodeText != referenceValue) continue;
 
                 for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName("@")) {
                     if (ref.metaKey == reference.metaKey) {
@@ -238,7 +251,7 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
                     }
                 }
             }
-            
+
         }
     }
 
