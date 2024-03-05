@@ -9,8 +9,12 @@
 
 MetaContext::MetaContext(TSTree *tree, uint32_t lineOffset, uint32_t byteOffset, std::string parentType,
                          std::string parentName)
-    : tree(tree), lineOffset(lineOffset), byteOffset(byteOffset), parentType(std::move(parentType)), parentName(std::move(parentName)) // Initializer list
+        : tree(tree), lineOffset(lineOffset), byteOffset(byteOffset), parentType(std::move(parentType)),
+          parentName(std::move(parentName)) // Initializer list
 {
+    if (this->parentType.find("outer_environment") != std::string::npos) {
+        this->parentType = "outer_environment";
+    }
 }
 
 
