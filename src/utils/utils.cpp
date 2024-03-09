@@ -42,7 +42,7 @@ namespace utils {
 #endif
 
 
-        #ifdef _WIN32
+#ifdef _WIN32
         std::transform(path.begin(), path.end(), path.begin(), ::tolower);
         // Windows file URIs start with a '/', which should not be present in the final path
         // Additionally, we need to handle drive letters (e.g., 'C:/')
@@ -86,6 +86,13 @@ namespace utils {
         return std::nullopt;
     }
 
+    bool endsWith(const std::string &str, const std::string &suffix) {
+        if (str.length() >= suffix.length()) {
+            return (str.rfind(suffix) == (str.length() - suffix.length()));
+        } else {
+            return false;
+        }
+    }
 
     std::string getChildText(TSNode node, const char *childType, WooWooDocument *doc) {
         uint32_t child_count = ts_node_child_count(node);
@@ -124,7 +131,7 @@ namespace utils {
         throw std::runtime_error(errorMessage);
     }
 
-    void appendToLogFile(const std::string& message) {
+    void appendToLogFile(const std::string &message) {
         std::ofstream logFile("log.txt", std::ios::app);
 
         if (!logFile) {

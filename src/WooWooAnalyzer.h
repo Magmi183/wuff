@@ -66,16 +66,20 @@ public:
     void documentDidChange(const TextDocumentIdentifier & tdi, std::string &source);
     void renameDocument(const std::string & oldUri, const std::string & newUri);
     void openDocument(const TextDocumentIdentifier & tdi);
+    void didDeleteFiles(const std::vector<std::string> & uris);
     
 private:
 
-    static std::vector<fs::path> findProjectFolders(const fs::path& rootPath);
-    static std::optional<fs::path> findProjectFolder(const std::string& uri);
+    std::vector<fs::path> findProjectFolders(const fs::path& rootPath);
+    std::optional<fs::path> findProjectFolder(const std::string& uri);
     
     void loadDocument(const fs::path& projectPath, const fs::path& documentPath);
+    void deleteDocument(WooWooDocument * document);
+    void deleteDocument(const std::string & uri);
     void handleDocumentChange(const TextDocumentIdentifier & tdi, std::string & source);
-    static bool endsWith(const std::string &str, const std::string &suffix) ;
     static std::vector<fs::path> findAllWooFiles(const fs::path  & rootPath);
+
+    fs::path workspaceRootPath;
 };
 
 

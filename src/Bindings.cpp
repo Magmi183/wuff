@@ -26,6 +26,7 @@ PYBIND11_MODULE(wuff, m) {
             .def("document_did_change", &WooWooAnalyzer::documentDidChange)
             .def("open_document", &WooWooAnalyzer::openDocument)
             .def("rename_document", &WooWooAnalyzer::renameDocument)
+            .def("did_delete_files", &WooWooAnalyzer::didDeleteFiles)
             .def("diagnose", &WooWooAnalyzer::diagnose)
             .def("set_token_types", &WooWooAnalyzer::setTokenTypes)
             .def("set_token_modifiers", &WooWooAnalyzer::setTokenModifiers);

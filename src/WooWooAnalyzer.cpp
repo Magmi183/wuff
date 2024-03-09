@@ -2,7 +2,6 @@
 // Created by Michal Janecek on 27.01.2024.
 //
 
-//#include <pybind11/pybind11.h>
 #include <filesystem>
 #include <string>
 #include <utility>
@@ -46,8 +45,8 @@ void WooWooAnalyzer::setDialect(const std::string &dialectPath) {
 }
 
 bool WooWooAnalyzer::loadWorkspace(const std::string &workspaceUri) {
-    fs::path rootPath = utils::uriToPathString(workspaceUri);
-    auto projectFolders = findProjectFolders(rootPath);
+    workspaceRootPath = utils::uriToPathString(workspaceUri);
+    auto projectFolders = findProjectFolders(workspaceRootPath);
 
     for (const fs::path &projectFolderPath: projectFolders) {
         for (const auto &entry: fs::recursive_directory_iterator(projectFolderPath)) {
@@ -58,7 +57,7 @@ bool WooWooAnalyzer::loadWorkspace(const std::string &workspaceUri) {
     }
 
     // now find and load all .woo files without a project
-    auto wooFiles = findAllWooFiles(rootPath);
+    auto wooFiles = findAllWooFiles(workspaceRootPath);
 
     for (auto &wooFile: wooFiles) {
         if (!docToProject.contains(wooFile.string())) {
@@ -96,18 +95,22 @@ std::vector<fs::path> WooWooAnalyzer::findProjectFolders(const fs::path &rootPat
 
 std::optional<fs::path> WooWooAnalyzer::findProjectFolder(const std::string &uri) {
     fs::path path = utils::uriToPathString(uri);
-    // Start from the given URI and move up the directory hierarchy
-    for (fs::path parent = path.parent_path(); parent!=parent.parent_path(); parent = parent.parent_path()) {
+    
+    // Start from parent of the file
+    fs::path parent = path.parent_path();
+    
+    // Explore up to the root folder of the project
+    while(parent!=workspaceRootPath.parent_path() && parent!=parent.parent_path()) {
         fs::path woofilePath = parent / "Woofile";
 
-        // Check if "Woofile" exists in this directory
+        // Check if Woofile exists in this directory
         if (fs::exists(woofilePath)) {
-            return parent; // Return the first parent directory containing "Woofile"
+            return parent; // Return the parent directory containing Woofile
         }
-        
+        parent = parent.parent_path();
     }
 
-    return std::nullopt; // Return an empty optional if no project folder is found
+    return std::nullopt; // no project folder found
 }
 
 void WooWooAnalyzer::loadDocument(const fs::path &projectPath, const fs::path &documentPath) {
@@ -121,8 +124,26 @@ DialectedWooWooDocument *WooWooAnalyzer::getDocumentByUri(const std::string &doc
 }
 
 DialectedWooWooDocument *WooWooAnalyzer::getDocument(const std::string &pathToDoc) {
-    return projects[docToProject[pathToDoc]][pathToDoc];
+    auto projectIter = docToProject.find(pathToDoc);
+    if (projectIter == docToProject.end()) {
+        // Document is not present in docToProject map
+        // Meaning it is unknown to the analyzer
+        return nullptr;
+    }
+
+    const auto& projectName = projectIter->second;
+    auto& projectMap = projects[projectName];
+
+    auto docIter = projectMap.find(pathToDoc);
+    if (docIter == projectMap.end()) {
+        // Document is not present in the projects map for the given project
+        // Should not ever happen
+        return nullptr;
+    }
+
+    return docIter->second;
 }
+
 
 std::vector<DialectedWooWooDocument *> WooWooAnalyzer::getDocumentsFromTheSameProject(WooWooDocument *document) {
     std::vector<DialectedWooWooDocument *> documents;
@@ -134,7 +155,8 @@ std::vector<DialectedWooWooDocument *> WooWooAnalyzer::getDocumentsFromTheSamePr
             documents.emplace_back(pair.second);
         }
     } else {
-        std::cerr << "Project with path '" << project << "' not found in projects map." << std::endl;
+        // TODO: handle this
+        // std::cerr << "Project with path '" << project << "' not found in projects map." << std::endl;
     }
     return documents;
 }
@@ -150,10 +172,13 @@ void WooWooAnalyzer::renameDocument(const std::string &oldUri, const std::string
     auto oldPath = utils::uriToPathString(oldUri);
     auto newPath = utils::uriToPathString(newUri);
 
-    if (endsWith(newUri, ".woo")) {
+    if (utils::endsWith(oldUri, ".woo") && utils::endsWith(newUri, ".woo")) {
+        // renaming a WooWoo file
         std::optional<fs::path> newProjectFolder = findProjectFolder(newUri);
         std::string oldProjectFolder = docToProject[oldPath];
         std::string newProjectFolderPathString = newProjectFolder.has_value() ? newProjectFolder.value().generic_string() : "";
+        
+        // TODO: Refactor .include statements!
         
         docToProject[newPath] = newProjectFolderPathString;
         docToProject.erase(oldPath);
@@ -161,22 +186,43 @@ void WooWooAnalyzer::renameDocument(const std::string &oldUri, const std::string
         projects[oldProjectFolder].erase(oldPath);
         projects[newProjectFolderPathString][newPath]->documentPath = fs::path(newPath);
 
-    } else {
-        // the file is no longer a WooWoo document
-        // TODO: Delete it.
+    } else if (utils::endsWith(oldUri, ".woo")) {
+        // the file was a WooWoo document, but now it is no longer a WooWoo document
+        deleteDocument(oldUri);
+    } else  {
+        // TODO
     }
 
 }
 
 
-
-bool WooWooAnalyzer::endsWith(const std::string &str, const std::string &suffix) {
-    if (str.length() >= suffix.length()) {
-        return (str.rfind(suffix) == (str.length() - suffix.length()));
-    } else {
-        return false;
+void WooWooAnalyzer::didDeleteFiles(const std::vector<std::string> &uris) {
+    // TODO: Handle Woofile + folders deletion
+    for (const auto & deletedFileUri : uris){
+        
+        auto doc = getDocumentByUri(deletedFileUri);
+        if (doc){
+            deleteDocument(doc);        
+        }
+        
     }
+    
 }
+
+void WooWooAnalyzer::deleteDocument(const std::string & uri) {
+    auto doc = getDocumentByUri(uri);
+    deleteDocument(doc);
+}
+
+void WooWooAnalyzer::deleteDocument(WooWooDocument *document) {
+    auto docPathString = document->documentPath.generic_string();
+    auto project = docToProject[docPathString];
+    docToProject.erase(docPathString);
+    projects[project].erase(docPathString);
+    
+    delete document;
+}
+
 
 // - LSP-like public interface - - -
 
