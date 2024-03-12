@@ -25,11 +25,11 @@ public:
     void utf8ToUtf16(Location & loc) const;
 
 private:
-    std::vector<std::unordered_map<int, int>> utf8ToUtf16Mappings;
-    std::vector<std::unordered_map<int, int>> utf16ToUtf8Mappings;
-    std::unordered_map<int, int> lineUtf8ToUtf16Mapping(const std::string& line);
+    std::vector<std::unordered_map<uint32_t, uint32_t>> utf8ToUtf16Mappings;
+    std::vector<std::unordered_map<uint32_t, uint32_t>> utf16ToUtf8Mappings;
+    std::unordered_map<uint32_t, uint32_t> lineUtf8ToUtf16Mapping(const std::string& line);
     static int utf8CharLen(unsigned char firstByte);
-    static uint32_t utf8ToCodePoint(const std::string& utf8, int& offset, int length);
+    static uint32_t utf8ToCodePoint(const std::string& utf8, uint32_t & offset, int length);
 };
 
 #endif //WUFF_UTF8TOUTF16MAPPING_H

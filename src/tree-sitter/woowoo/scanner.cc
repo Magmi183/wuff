@@ -1,15 +1,11 @@
 #include "tree_sitter/parser.h"
 
-#include <vector>
-#include <cstring> // Required for memcpy
-#include <iostream>
-
-using std::vector;
-using std::memcpy;
+#include <cctype>  // For islower and isalpha
+#include <cwctype> // For iswalnum
 
 // order must match the externals array in grammar, actual names do not matter
 enum TokenType {
-    TEXT_NO_SPACE_NO_DOT,
+    TEXT_NO_SPACE_NO_DOT, // higher precedence than text!
     TEXT,
     FRAGILE_OUTER_ENVIRONMENT_BODY,
     COMMENT,
@@ -47,7 +43,7 @@ struct Scanner {
     }
 
     void advance(TSLexer *lexer) {
-        uint32_t consumed = lexer->lookahead;
+        int consumed = lexer->lookahead;
         lexer->advance(lexer, false);
 
         // if consuming newline, check if next line is a comment line, if so, consume it
@@ -101,12 +97,11 @@ struct Scanner {
 
     }
 
-
     void mark_end(TSLexer *lexer) {
         lexer->mark_end(lexer);
     }
 
-    uint32_t get_column(TSLexer *lexer) {
+    int get_column(TSLexer *lexer) {
         if (lexer->eof(lexer)) {
             return 0;
         }
@@ -163,7 +158,7 @@ struct Scanner {
                 }
 
                 if (state->space_count == (indent_level + 1) * INDENT_LEN) {
-                    // mark end of first new indent level (others may follow, but they will not be the part of this emition)
+                    // mark end of first new indent level (others may follow, but they will not be the part of this emission)
                     mark_end(lexer);
                 }
 
@@ -175,14 +170,14 @@ struct Scanner {
             }
         }
 
-
-        // TODO: If there are for example 3 spaces, this division causes it to be treated like 2.
-        // This needs to be solved, perhaps with some clever error recovery.
-
         uint16_t new_indent_level = state->space_count / INDENT_LEN;
 
-
         if (valid_symbols[INDENT] && new_indent_level > indent_level && could_be_indent) {
+            if (state->space_count % INDENT_LEN != 0 && !valid_symbols[ERROR_SENTINEL]) {
+                // indent found, but there are extra spaces, return nothing, which will cause ERROR node to be added
+                // this will cause the scanner to be called one more time, but this time we do emit the indent
+                return false;
+            }
             // current line is indented more than our current level, INDENT has to be emitted
             return indent(lexer, new_indent_level, false);
         }
@@ -194,8 +189,7 @@ struct Scanner {
             }
         }
 
-
-        // TODO: This part can very likely be improved by a lot.
+        // Note: This part could likely be improved.
         if (newline_count || lexer->eof(lexer)) {
 
             if (valid_symbols[DEDENT] && new_indent_level < indent_level) {
@@ -234,7 +228,7 @@ struct Scanner {
 
                         if (new_indent_level == indent_level) {
                             // it was just an empty line, indent is continuing on the same level, no DEDENT
-                            // or even more indentation is occuring (implicit outer)
+                            // or even more indentation is occurring (implicit outer)
                             mark_end(lexer); // (mark all the way to the point where next content is starting)
                             if (!multi && !starting_on_newline) {
                                 // if we started on newline, that means the first newline we scanned was on empty line
@@ -359,12 +353,12 @@ struct Scanner {
             /**
              * Before emitting dedents, we need to check if it is still valid.
              * That is, no empty/multiempty line follows.
-             * TODO: Encapsulate this logic and use it both here and in the scan function, right now there is a lot of duplication.
+             * Note: This logic is used both here and in the scan function, could be encapsulated for less duplication.
              */
 
             mark_end(lexer);
             if (valid_symbols[MULTI_EMPTY_LINE]) {
-                uint32_t newline_count = 0;
+                int newline_count = 0;
                 if (onNewline(lexer)) {
                     while (onNewline(lexer)) {
                         ++newline_count;
@@ -378,7 +372,7 @@ struct Scanner {
                     ++state->space_count;
                 }
 
-                uint32_t new_indent_level = state->space_count / INDENT_LEN;
+                int new_indent_level = state->space_count / INDENT_LEN;
 
                 if (new_indent_level >= indent_level) {
                     mark_end(lexer); // (mark all the way to the point where next content is starting)
@@ -403,7 +397,7 @@ struct Scanner {
     }
 
     /*
-     * Handle dedent emition.
+     * Handle dedent emission.
      */
     bool dedent(TSLexer *lexer, int indentation_level) {
         indent_level--;
@@ -446,17 +440,16 @@ struct Scanner {
     }
 
 
-    // TODO: Detecting fragile outer, short inner and classic inner is almost identical.
-    // Come up with a nice solution to merge it.
     bool scanText(TSLexer *lexer, const bool *valid_symbols) {
 
         if (lexer->lookahead == '.' && get_column(lexer) == 0) {
-            // TODO: This has to be fixed, it was just a quick-fix solution. (see test-cases)
+            // Note: this may cause problems in rare cases where a text could start with a dot.
+            // For now, it is done like this to be consistent with the TextMate grammar.
             return false;
         }
 
         if (!valid_symbols[ERROR_SENTINEL] && valid_symbols[FRAGILE_OUTER_ENVIRONMENT_BODY]) {
-            return scanFragile(lexer, valid_symbols);
+            return scanFragile(lexer);
         }
 
         if (valid_symbols[TEXT] || valid_symbols[TEXT_NO_SPACE_NO_DOT] || valid_symbols[VERBOSE_INNER_ENV_META]) {
@@ -486,12 +479,12 @@ struct Scanner {
                         lexer->result_symbol = TEXT_NO_SPACE_NO_DOT;
                         return true;
                     } else if (lexer->lookahead == '.') {
-                        // DOT is a very special character in WooWoo, it may, or it may not, mark a start for a lot of constructs
+                        // DOT is a very special character in WooWoo, it may, or it may not, mark a start of a lot of constructs
                         if (!consumed) {
                             startWithDot = true;
                         }
 
-                        // WHEREVER in text we are, DOT means that an short inner env. could be beginning
+                        // WHEREVER in text we are, DOT means that a short inner env. could be beginning
                         mark_end(lexer); // remember end of current text
                         int consumed_before = consumed; // remember consumed len
                         if (isShortInnerEnv(lexer, consumed, spaceDotCount)) {
@@ -526,7 +519,6 @@ struct Scanner {
                         continue;
                     }
 
-
                 }
 
 
@@ -557,7 +549,7 @@ struct Scanner {
         return false;
     }
 
-    bool scanFragile(TSLexer *lexer, const bool *valid_symbols) {
+    bool scanFragile(TSLexer *lexer) {
         bool prev_newline = false;
 
         while (!lexer->eof(lexer)) {
@@ -569,7 +561,7 @@ struct Scanner {
 
                     advance(lexer);
 
-                    uint32_t space_count = 0;
+                    int space_count = 0;
                     while (lexer->lookahead == ' ') {
                         space_count++;
                         advance(lexer);
@@ -600,7 +592,7 @@ struct Scanner {
             advance(lexer);
         }
 
-        if(lexer->eof(lexer)){
+        if (lexer->eof(lexer)) {
             // if we are at the end of the file, consume everything
             // in other case we are stopping because of a newline, and we do not want to consume that
             mark_end(lexer);

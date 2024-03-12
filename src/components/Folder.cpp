@@ -6,6 +6,7 @@
 #include "../utils/utils.h"
 
 // TODO feat: Add other kinds of folding ranges.
+// https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#foldingRangeKind
 
 Folder::Folder(WooWooAnalyzer *analyzer) : Component(analyzer) {
     prepareQueries();

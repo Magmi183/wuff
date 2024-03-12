@@ -8,7 +8,7 @@
 #include <utility>
 
 
-WooWooDocument::WooWooDocument(fs::path documentPath, Parser *parser) : documentPath(std::move(documentPath)), parser(parser) {
+WooWooDocument::WooWooDocument(fs::path documentPath, Parser *parser) : parser(parser), documentPath(std::move(documentPath)) {
     utfMappings = new UTF8toUTF16Mapping();
     updateSource();
 }

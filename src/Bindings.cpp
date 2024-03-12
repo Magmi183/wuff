@@ -82,7 +82,7 @@ PYBIND11_MODULE(wuff, m) {
     py::enum_<CompletionItemKind>(m, "CompletionItemKind")
             .value("Text", CompletionItemKind::Text)
             .value("Snippet", CompletionItemKind::Snippet)
-                    // TODO: other possible values
+             // Note: LSP lists many other possible values, which are not used in this project right now.
             .export_values();
 
     py::enum_<InsertTextFormat>(m, "InsertTextFormat")

@@ -15,7 +15,7 @@ void UTF8toUTF16Mapping::buildMappings(const std::string& source) {
 
     // Build reverse mappings
     for (const auto& map : utf8ToUtf16Mappings) {
-        std::unordered_map<int, int> reverseMap;
+        std::unordered_map<uint32_t, uint32_t> reverseMap;
         for (const auto& pair : map) {
             reverseMap[pair.second] = pair.first;
         }
@@ -23,10 +23,10 @@ void UTF8toUTF16Mapping::buildMappings(const std::string& source) {
     }
 }
 
-std::unordered_map<int, int> UTF8toUTF16Mapping::lineUtf8ToUtf16Mapping(const std::string& line) {
-    std::unordered_map<int, int> mapping;
-    int utf8Offset = 0;
-    int utf16Position = 0;
+std::unordered_map<uint32_t , uint32_t > UTF8toUTF16Mapping::lineUtf8ToUtf16Mapping(const std::string& line) {
+    std::unordered_map<uint32_t , uint32_t > mapping;
+    uint32_t utf8Offset = 0;
+    uint32_t utf16Position = 0;
 
     while (utf8Offset < line.size()) {
         unsigned char c = line[utf8Offset];
@@ -65,7 +65,7 @@ int UTF8toUTF16Mapping::utf8CharLen(unsigned char firstByte) {
     return 0; // Error case
 }
 
-uint32_t UTF8toUTF16Mapping::utf8ToCodePoint(const std::string& utf8, int& offset, int length) {
+uint32_t UTF8toUTF16Mapping::utf8ToCodePoint(const std::string& utf8, uint32_t & offset, int length) {
     uint32_t codePoint = 0;
     if (length == 1) {
         codePoint = utf8[offset];

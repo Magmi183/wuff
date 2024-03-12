@@ -30,7 +30,7 @@ public:
     std::string source;
     
     WooWooDocument(fs::path documentPath1, Parser * parser1);
-    ~WooWooDocument();
+    virtual ~WooWooDocument();
 
     void updateSource();
     virtual void updateSource(std::string &source);

@@ -79,9 +79,9 @@ std::vector<int> Highlighter::semanticTokens(const std::string &docUri) {
     uint32_t lastStart = 0;
     for (const NodeInfo &node: nodes) {
 
-        std::pair<int, int> startPoint = document->utfMappings->utf8ToUtf16(node.startPoint.row,
+        std::pair<uint32_t , uint32_t> startPoint = document->utfMappings->utf8ToUtf16(node.startPoint.row,
                                                                             node.startPoint.column);
-        std::pair<int, int> endPoint = document->utfMappings->utf8ToUtf16(node.endPoint.row, node.endPoint.column);
+        std::pair<uint32_t, uint32_t> endPoint = document->utfMappings->utf8ToUtf16(node.endPoint.row, node.endPoint.column);
 
         uint32_t deltaStart =
                 lastLine == startPoint.first ? startPoint.second - lastStart : startPoint.second;

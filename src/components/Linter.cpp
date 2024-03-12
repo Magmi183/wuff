@@ -15,8 +15,6 @@ std::vector<Diagnostic> Linter::diagnose(const TextDocumentIdentifier &tdi) {
     std::vector<Diagnostic> diagnostics;
     diagnoseErrors(doc, diagnostics);;
     diagnoseMissingNodes(doc, diagnostics);
-
-    diagnoseMetaBlocks(doc, diagnostics);
     
     return diagnostics;
 }
@@ -48,7 +46,6 @@ void Linter::diagnoseErrors(WooWooDocument *doc, std::vector<Diagnostic> &diagno
 
 }
 
-// TODO: Test this.
 void Linter::diagnoseMissingNodes(WooWooDocument *doc, std::vector<Diagnostic> &diagnostics) {
     // Recursive lambda function to traverse the syntax tree
     std::function<void(TSNode)> traverseTree = [&](TSNode node) {
@@ -57,9 +54,8 @@ void Linter::diagnoseMissingNodes(WooWooDocument *doc, std::vector<Diagnostic> &
         for (uint32_t i = 0; i < childCount; ++i) {
             TSNode child = ts_node_child(node, i);
 
-            // Check if the node is missing
             if (ts_node_is_missing(child)) {
-                // Construct the range for the missing node
+                // Constructing the range for the missing node
                 TSPoint start_point = ts_node_start_point(child);
                 TSPoint end_point = ts_node_end_point(child);
 
@@ -77,10 +73,6 @@ void Linter::diagnoseMissingNodes(WooWooDocument *doc, std::vector<Diagnostic> &
 
     // Start the tree traversal from the root node
     traverseTree(ts_tree_root_node(doc->tree));
-}
-
-void Linter::diagnoseMetaBlocks(WooWooDocument *doc, std::vector<Diagnostic> &d) {
-
 }
 
 const std::unordered_map<std::string, std::pair<TSLanguage*, std::string>> &Linter::getQueryStringByName() const {
