@@ -4,8 +4,6 @@
 
 #include "Navigator.h"
 
-#include <pybind11/attr.h>
-
 #include "../utils/utils.h"
 
 Navigator::Navigator(WooWooAnalyzer *analyzer) : Component(analyzer) {
@@ -61,7 +59,7 @@ std::vector<Location> Navigator::findMetaBlockReferences(const ReferenceParams &
 
         auto s = ts_node_start_point(valueNode);
         auto e = ts_node_end_point(valueNode);
-        
+
         if (params.includeDeclaration) { //TODO: Add condition - that the key can possibly be referenced (i.e. is it valid to to include this as a declaration?)
 
             Location l = {utils::pathToUri(document->documentPath), Range{{s.row + mx->lineOffset, s.column},
@@ -275,6 +273,63 @@ Location Navigator::findReference(const DefinitionParams &params, const std::vec
 
 // - - - - - - -
 
+WorkspaceEdit Navigator::refactorDocumentReferences(const std::vector<std::pair<std::string, std::string>> & renamedDocuments) {
+    WorkspaceEdit we;
+    for (const auto &documentRename: renamedDocuments) {
+        // document that was renamed (internally, in analyzer, the path should be already updated)
+        WooWooDocument *renamedDoc = analyzer->getDocument(documentRename.second);
+        std::string oldFileName = documentRename.first;
+        fs::path oldFilePath(oldFileName);
+        fs::path oldFileDir = oldFilePath.parent_path();
+        
+        // iterate over every document from the same project and look for references (from include statements)
+        for (WooWooDocument *projectDocument: analyzer->getDocumentsFromTheSameProject(renamedDoc)) {
+            TSQueryCursor *cursor = ts_query_cursor_new();
+            ts_query_cursor_exec(cursor, queries[filenameQuery], ts_tree_root_node(projectDocument->tree));
+            TSQueryMatch match;
+            std::string nodeType;
+            std::string nodeText;
+            
+            while (ts_query_cursor_next_match(cursor, &match)) {
+                if (match.capture_count > 0) {
+                    TSNode node = match.captures[0].node;
+                    nodeText = projectDocument->getNodeText(node);
+
+                    fs::path includedFilePath(nodeText);
+                    if (!includedFilePath.is_absolute()) {
+                        includedFilePath = projectDocument->documentPath.parent_path() / includedFilePath;
+                    }
+
+                    try {
+                        if(fs::canonical(oldFilePath) == fs::canonical(includedFilePath)){
+                            // found include referring to the old filename
+                            // we want to replace it with the new filename
+                            
+                            fs::path relativePath = fs::relative(renamedDoc->documentPath, projectDocument->documentPath.parent_path());
+
+                            auto s = ts_node_start_point(node);
+                            auto e = ts_node_end_point(node);
+
+                            Location l = {utils::pathToUri(projectDocument->documentPath), Range{{s.row, s.column},
+                                                                                              {e.row, e.column}}};
+                            projectDocument->utfMappings->utf8ToUtf16(l);
+                            
+                            TextEdit te = TextEdit(l.range, relativePath.generic_string());
+                            we.add_change(l.uri, te);
+                        }
+
+                    } catch (...) {
+                        // if something fails, simply do not refactor it
+                    }
+                }
+            }
+        }
+    }
+    return we;
+}
+
+// - - - - - - -
+
 const std::unordered_map<std::string, std::pair<TSLanguage *, std::string>> &Navigator::getQueryStringByName() const {
     return queryStringsByName;
 }
@@ -282,6 +337,7 @@ const std::unordered_map<std::string, std::pair<TSLanguage *, std::string>> &Nav
 const std::string Navigator::metaFieldQuery = "metaFieldQuery";
 const std::string Navigator::goToDefinitionQuery = "goToDefinitionQuery";
 const std::string Navigator::findReferencesQuery = "findReferencesQuery";
+const std::string Navigator::filenameQuery = "filenameQuery";
 const std::unordered_map<std::string, std::pair<TSLanguage *, std::string>> Navigator::queryStringsByName = {
         {metaFieldQuery,      std::make_pair(tree_sitter_yaml(), MetaContext::metaFieldQueryString)},
         {goToDefinitionQuery, std::make_pair(tree_sitter_woowoo(),
@@ -295,7 +351,8 @@ const std::unordered_map<std::string, std::pair<TSLanguage *, std::string>> Navi
         {findReferencesQuery, std::make_pair(tree_sitter_woowoo(),
                                              R"(
 (meta_block) @type
-)")}
+)")},
+        {filenameQuery,       std::make_pair(tree_sitter_woowoo(), "(filename) @filename")}
 };
 
 

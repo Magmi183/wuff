@@ -25,7 +25,7 @@ PYBIND11_MODULE(wuff, m) {
             .def("folding_ranges", &WooWooAnalyzer::foldingRanges)
             .def("document_did_change", &WooWooAnalyzer::documentDidChange)
             .def("open_document", &WooWooAnalyzer::openDocument)
-            .def("rename_document", &WooWooAnalyzer::renameDocument)
+            .def("rename_files", &WooWooAnalyzer::renameFiles)
             .def("did_delete_files", &WooWooAnalyzer::didDeleteFiles)
             .def("diagnose", &WooWooAnalyzer::diagnose)
             .def("set_token_types", &WooWooAnalyzer::setTokenTypes)

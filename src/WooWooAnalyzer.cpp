@@ -95,12 +95,12 @@ std::vector<fs::path> WooWooAnalyzer::findProjectFolders(const fs::path &rootPat
 
 std::optional<fs::path> WooWooAnalyzer::findProjectFolder(const std::string &uri) {
     fs::path path = utils::uriToPathString(uri);
-    
+
     // Start from parent of the file
     fs::path parent = path.parent_path();
-    
+
     // Explore up to the root folder of the project
-    while(parent!=workspaceRootPath.parent_path() && parent!=parent.parent_path()) {
+    while (parent != workspaceRootPath.parent_path() && parent != parent.parent_path()) {
         fs::path woofilePath = parent / "Woofile";
 
         // Check if Woofile exists in this directory
@@ -114,7 +114,9 @@ std::optional<fs::path> WooWooAnalyzer::findProjectFolder(const std::string &uri
 }
 
 void WooWooAnalyzer::loadDocument(const fs::path &projectPath, const fs::path &documentPath) {
-    projects[projectPath.generic_string()][documentPath.generic_string()] = new DialectedWooWooDocument(documentPath, parser, dialectManager);
+    projects[projectPath.generic_string()][documentPath.generic_string()] = new DialectedWooWooDocument(documentPath,
+                                                                                                        parser,
+                                                                                                        dialectManager);
     docToProject[documentPath.generic_string()] = projectPath.generic_string();
 }
 
@@ -131,8 +133,8 @@ DialectedWooWooDocument *WooWooAnalyzer::getDocument(const std::string &pathToDo
         return nullptr;
     }
 
-    const auto& projectName = projectIter->second;
-    auto& projectMap = projects[projectName];
+    const auto &projectName = projectIter->second;
+    auto &projectMap = projects[projectName];
 
     auto docIter = projectMap.find(pathToDoc);
     if (docIter == projectMap.end()) {
@@ -167,49 +169,60 @@ void WooWooAnalyzer::handleDocumentChange(const TextDocumentIdentifier &tdi, std
     document->updateSource(source);
 }
 
-void WooWooAnalyzer::renameDocument(const std::string &oldUri, const std::string &newUri) {
+WorkspaceEdit WooWooAnalyzer::renameFiles(const std::vector<std::pair<std::string, std::string>> &renames) {
+    WorkspaceEdit we;
 
-    auto oldPath = utils::uriToPathString(oldUri);
-    auto newPath = utils::uriToPathString(newUri);
+    std::vector<std::pair<std::string, std::string>> renamedDocuments;
+    for (const auto& fileRename: renames) {
+    
+        auto oldUri = fileRename.first;
+        auto newUri = fileRename.second;
+        auto oldPath = utils::uriToPathString(oldUri);
+        auto newPath = utils::uriToPathString(newUri);
 
-    if (utils::endsWith(oldUri, ".woo") && utils::endsWith(newUri, ".woo")) {
-        // renaming a WooWoo file
-        std::optional<fs::path> newProjectFolder = findProjectFolder(newUri);
-        std::string oldProjectFolder = docToProject[oldPath];
-        std::string newProjectFolderPathString = newProjectFolder.has_value() ? newProjectFolder.value().generic_string() : "";
-        
-        // TODO: Refactor .include statements!
-        
-        docToProject[newPath] = newProjectFolderPathString;
-        docToProject.erase(oldPath);
-        projects[newProjectFolderPathString][newPath] = projects[oldProjectFolder][oldPath];
-        projects[oldProjectFolder].erase(oldPath);
-        projects[newProjectFolderPathString][newPath]->documentPath = fs::path(newPath);
+        if (utils::endsWith(oldPath, ".woo") && utils::endsWith(newPath, ".woo")) {
+            // renaming a WooWoo file
+            std::optional<fs::path> newProjectFolder = findProjectFolder(newUri);
+            std::string oldProjectFolder = docToProject[oldPath];
+            std::string newProjectFolderPathString = newProjectFolder.has_value()
+                                                     ? newProjectFolder.value().generic_string() : "";
 
-    } else if (utils::endsWith(oldUri, ".woo")) {
-        // the file was a WooWoo document, but now it is no longer a WooWoo document
-        deleteDocument(oldUri);
-    } else  {
-        // TODO
+            docToProject[newPath] = newProjectFolderPathString;
+            docToProject.erase(oldPath);
+            projects[newProjectFolderPathString][newPath] = projects[oldProjectFolder][oldPath];
+            projects[oldProjectFolder].erase(oldPath);
+            projects[newProjectFolderPathString][newPath]->documentPath = fs::path(newPath);
+            
+            renamedDocuments.emplace_back(oldPath, newPath);
+
+        } else if (utils::endsWith(oldPath, ".woo")) {
+            // the file was a WooWoo document, but now it is no longer a WooWoo document
+            deleteDocument(oldPath);
+        } else {
+            // TODO
+        }
     }
-
+    
+    // analyzer state is updated, now refactor file references (includes)
+    return navigator->refactorDocumentReferences(renamedDocuments);
+    
 }
 
 
 void WooWooAnalyzer::didDeleteFiles(const std::vector<std::string> &uris) {
     // TODO: Handle Woofile + folders deletion
-    for (const auto & deletedFileUri : uris){
-        
+    for (const auto &deletedFileUri: uris) {
+
         auto doc = getDocumentByUri(deletedFileUri);
-        if (doc){
-            deleteDocument(doc);        
+        if (doc) {
+            deleteDocument(doc);
         }
-        
+
     }
-    
+
 }
 
-void WooWooAnalyzer::deleteDocument(const std::string & uri) {
+void WooWooAnalyzer::deleteDocument(const std::string &uri) {
     auto doc = getDocumentByUri(uri);
     deleteDocument(doc);
 }
@@ -219,7 +232,7 @@ void WooWooAnalyzer::deleteDocument(WooWooDocument *document) {
     auto project = docToProject[docPathString];
     docToProject.erase(docPathString);
     projects[project].erase(docPathString);
-    
+
     delete document;
 }
 
@@ -234,7 +247,7 @@ std::vector<int> WooWooAnalyzer::semanticTokens(const std::string &docUri) {
     return highlighter->semanticTokens(docUri);
 }
 
-Location WooWooAnalyzer::goToDefinition(const DefinitionParams& params) {
+Location WooWooAnalyzer::goToDefinition(const DefinitionParams &params) {
     return navigator->goToDefinition(params);
 }
 
@@ -273,7 +286,12 @@ void WooWooAnalyzer::openDocument(const TextDocumentIdentifier &tdi) {
 }
 
 
-void WooWooAnalyzer::setTokenTypes(std::vector<std::string> tokenTypes) { return highlighter->setTokenTypes(std::move(tokenTypes)); }
-void WooWooAnalyzer::setTokenModifiers (std::vector<std::string> tokenModifiers) { return highlighter->setTokenModifiers(std::move(tokenModifiers)); }
+void WooWooAnalyzer::setTokenTypes(std::vector<std::string> tokenTypes) {
+    return highlighter->setTokenTypes(std::move(tokenTypes));
+}
+
+void WooWooAnalyzer::setTokenModifiers(std::vector<std::string> tokenModifiers) {
+    return highlighter->setTokenModifiers(std::move(tokenModifiers));
+}
 
 // - - - - - - - - - - - - - - - - -

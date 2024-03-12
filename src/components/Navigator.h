@@ -21,6 +21,9 @@ public:
     std::vector<Location> references(const ReferenceParams &params);
 
     WorkspaceEdit rename(const RenameParams &params);
+    
+    // document which was renamed (should be already updated) + its old path string
+    WorkspaceEdit refactorDocumentReferences(const std::vector<std::pair<std::string, std::string>> & renamedDocuments);
 
 private:
     Location navigateToFile(const DefinitionParams &params, const std::string &relativeFilePath);
@@ -48,6 +51,7 @@ private:
     static const std::string goToDefinitionQuery;
     static const std::string metaFieldQuery;
     static const std::string findReferencesQuery;
+    static const std::string filenameQuery;
     static const std::unordered_map<std::string, std::pair<TSLanguage *, std::string>> queryStringsByName;
 
 

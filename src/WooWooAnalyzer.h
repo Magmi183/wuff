@@ -64,7 +64,7 @@ public:
     void setTokenTypes(std::vector<std::string> tokenTypes);
     void setTokenModifiers (std::vector<std::string> tokenModifiers);
     void documentDidChange(const TextDocumentIdentifier & tdi, std::string &source);
-    void renameDocument(const std::string & oldUri, const std::string & newUri);
+    WorkspaceEdit renameFiles(const std::vector<std::pair<std::string, std::string>> & renames);
     void openDocument(const TextDocumentIdentifier & tdi);
     void didDeleteFiles(const std::vector<std::string> & uris);
     
