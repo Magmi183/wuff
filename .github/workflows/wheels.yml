@@ -32,7 +32,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        # macos-13 is an intel runner, macos-14 is apple silicon
+        # from: https://github.com/pypa/cibuildwheel/blob/main/examples/github-deploy.yml
+        os: [ ubuntu-latest, windows-latest, macos-13, macos-14 ]
 
     steps:
       - uses: actions/checkout@v4
