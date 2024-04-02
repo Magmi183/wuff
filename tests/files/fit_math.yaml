@@ -1,0 +1,317 @@
+name: "FIT Math"
+version_code: 1
+version_name: "1.0.0"
+description: |-
+  This dialect is used for writing almost all of the math courses on FIT CTU.
+  Blocks are rendered as paragraphs.
+  Indented blocks are unnumbered equations.
+  It was developed by Tomas Kalvoda.
+
+implicit_outer_environment: "equation"
+
+# meta block fields common for all wobjects/docparts
+
+document_parts:
+  - name: "Chapter"
+    description: "Top-level document part with the chapter's textual content and list of sections."
+    meta_block: &doc_part_meta
+      required_fields:
+        - name: label
+      optional_fields:
+        - name: skip # string or [string]
+        - name: only # string or [string]
+        - name: short_title
+        - name: pdf_string
+        - name: index
+
+  - name: "Section"
+    description: "Second-level document part with the section's textual content and list of subsections."
+    meta_block: *doc_part_meta
+
+  - name: "Subsection"
+    description: "Rendered as part of the section page."
+    meta_block: *doc_part_meta
+
+
+wobjects:
+  - name: "Algorithm"
+    description: "Environment with a textual description of an algorithm."
+    meta_block: &default_meta
+      optional_fields:
+        - name: skip
+        - name: only
+        - name: title
+        - name: english
+        - name: label
+        - name: index
+
+  - name: "Corollary"
+    description: "Mathematical environment containing a corollary."
+    meta_block: *default_meta
+
+  - name: "Definition"
+    description: "Mathematical environment containing a definition."
+    meta_block: *default_meta
+
+  - name: "Example"
+    description: "Environment intended for examples."
+    meta_block: &default_with_star
+      optional_fields:
+        - name: skip
+        - name: only
+        - name: title
+        - name: english
+        - name: label
+        - name: index
+        - name: star  # boolean => Starred examples are considered to be harder.
+
+  - name: "Exercise"
+    description: "Environment intended for exercises."
+    meta_block: *default_with_star
+
+  - name: "Figure"
+    description: "Analogue of the LaTeX figure float environment."
+    meta_block:
+      optional_fields:
+        - name: skip
+        - name: only
+        - name: options
+        - name: glue
+        - name: vertical
+        - name: label
+        - name: columns
+    # Content: Should contain .images or !tikzs and a .caption.
+
+  - name: "Lemma"
+    description: "Mathematical environment containing a lemma."
+    meta_block: *default_meta
+
+  - name: "Observation"
+    description: "Textual observation of some sorts."
+    meta_block: *default_meta
+
+  - name: "Proposition"
+    description: "Mathematical environment containing a proposition."
+    meta_block: *default_meta
+
+  - name: "Question"
+    description: "Environment for questions with possible solutions summarized at the end of the document."
+    meta_block:
+      optional_fields:
+        - name: skip
+        - name: only
+        - name: label
+        - name: solution
+
+  - name: "Remark"
+    description: "Mathematical environment containing a remark."
+    meta_block: *default_meta
+
+  - name: "Proof"
+    description: "A mathematical proof."
+    meta_block: &math_result
+      optional_fields:
+        - name: skip
+        - name: only
+        - name: title
+        - name: label
+        - name: show
+
+  - name: "Solution"
+    description: "Environment containing a solution."
+    meta_block: *math_result
+
+  - name: "Table"
+    description: "Equivalent of the LaTeX table float environment."
+    meta_block:
+      optional_fields:
+        - name: skip
+        - name: only
+        - name: label
+        - name: options
+    # Content: Should contain !tabular or ,table and a .caption
+
+  - name: "Theorem"
+    description: "Mathematical environment containing a theorem."
+    meta_block: *default_meta
+
+  - name: "Warning"
+    description: "Mathematical environment containing a warning."
+    meta_block: *default_meta
+
+
+environments:
+    # - - - Environments mainly used in outer classic:
+  - name: enumerate
+    description: "An enumerated list."
+    meta_block:
+      optional_fields:
+        - name: type
+
+  - name: equation
+    description: "A simple math equation"
+    meta_block: &optional_label
+      optional_fields:
+        - name: label
+
+  - name: align
+    description: "AMSMath align environment. At the moment only the last equation is numbered."
+    meta_block: *optional_label
+
+  - name: gather
+    description: "AMSMath gather environment."
+    meta_block: *optional_label
+
+  - name: caption
+    description: "Caption of a Figure or Table float."
+
+  - name: cell
+    description: "Table cell."
+
+  - name: centered
+    description: "A row with a centered content."
+
+  - name: codeblock
+    description: "Code block typeset by the pygmentize package."
+    meta_block:
+      optional_fields:
+        - name: language
+
+  - name: description
+    description: "Description list with custom bullets. Essentially the itemize environment."
+
+  - name: ditem
+    description: "A description item with a custom bullet."
+    meta_block:
+      required_fields:
+        - name: bullet
+
+  - name: image
+    description: "Inclusion of an external image."
+    meta_block:
+      optional_fields:
+        - name: alt
+        - name: options
+
+  - name: itemize
+    description: "A general unnumbered list."
+
+  - name: item
+    description: "A general list item."
+
+  - name: quote
+    description: "A quotation."
+    meta_block:
+      optional_fields:
+        - name: author
+        - name: link
+
+  - name: table
+    description: "Custom table environment composed of .rows, and optional .cells."
+    meta_block:
+      required_fields:
+        - name: columns
+      optional_fields:
+        - name: arraystretch
+
+  - name: row
+    description: "A table row."
+
+  - name: tabular
+    description: "Simple tables processed by pandoc."
+    meta_block:
+      optional_fields:
+        - name: arraystretch
+        - name: filename
+
+    # - - - Environments mainly used in outer fragile form:
+  - name: tikz
+    description: "A tikz picture environment."
+    fragile: true
+    meta_block:
+      required_fields:
+        - name: filename
+      optional_fields:
+        - name: options
+        - name: include_options
+
+  - name: sage
+    description: "A sage cell (note: WIP)."
+
+    # - - - Environments mainly used in inner form:
+  - name: quoted
+    description: "A piece of quoted text, inline."
+
+  - name: emphasize
+    description: "An emphasized text."
+
+  - name: footnote
+    description: "A footnote."
+
+  - name: mpopup
+    description: | 
+      Render a pop up hint in math equation (relies on a JS from custom.js).
+      Ignored in PDF (mainly do to lack of PDF viewers support).
+    meta_block:
+      required_fields:
+        - name: hint
+
+  - name: notion
+    description: "An introduction of a new notion."
+    meta_block:
+      optional_fields:
+        - name: label
+        - name: index
+
+  - name: reference
+    description: "A reference to other part of document or outside source."
+    meta_block:
+      optional_fields:
+        - name: ref
+          references:
+            - meta_key: label
+        - name: link
+    references:
+      - meta_key: label
+
+  - name: todo
+    description: "A brief inline todo note."
+
+  - name: eqref
+    description: "Equation reference."
+    references:
+      - structure_type: outer_environment
+        structure_name: equation
+        meta_key: label
+
+  - name: cite
+    description: "Citation of a bibliography source."
+
+  - name: code
+    description: "Inline code with no highlighting."
+
+  - name: small
+    description: "Text typeset in smaller font size."
+
+  - name: underline
+    description: "An underlined text."
+
+shorthands:
+  hash:
+    description: "Clickable link to an equation or wobject."
+    references:
+      - structure_type: wobject
+        meta_key: label
+      - structure_type: outer_environment
+        structure_name: equation
+        meta_key: label
+  at:
+    description: "Can be used when referencing external web page."
+
+
+# SOURCES:
+# This dialect is compiled from the listed sources.
+# The information was combined.
+# 1) https://gitlab.fit.cvut.cz/woowoo/fit-html
+#    - full_reference not added yet
+# 2) https://gitlab.fit.cvut.cz/woowoo/fit-pdf

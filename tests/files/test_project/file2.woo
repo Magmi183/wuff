@@ -1,0 +1,9 @@
+.Chapter Test2
+  label: ct2
+
+
+Implicit outer environments are a strength of WooWoo.
+
+  1 + 1 = 2
+
+See? That was all for this chapter, .reference:ct2

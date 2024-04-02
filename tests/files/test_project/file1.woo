@@ -1,0 +1,9 @@
+.Chapter Test1
+  label: ct1
+
+
+Hello. Nothing here, refer to .reference:ct2
+Thanks.
+
+
+.include empty.woo

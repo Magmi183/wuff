@@ -1,0 +1,6 @@
+.Chapter Test3
+  label: ct3
+
+
+Just refer to .reference:ct2
+Missing node: .cite:   ?
