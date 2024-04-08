@@ -15,7 +15,7 @@ class Hoverer : Component {
 public:
     explicit Hoverer(WooWooAnalyzer* analyzer);
 
-    std::string hover(const std::string& docUir, uint32_t line, uint32_t character);
+    std::string hover(const std::string& docUri, uint32_t line, uint32_t character);
 
 private:
 
