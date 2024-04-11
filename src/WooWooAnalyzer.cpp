@@ -31,7 +31,12 @@ WooWooAnalyzer::WooWooAnalyzer() : dialectManager(nullptr) {
 
 WooWooAnalyzer::~WooWooAnalyzer() {
     delete parser;
+    delete highlighter;
     delete hoverer;
+    delete navigator;
+    delete completer;
+    delete linter;
+    delete folder;
 
     for (auto &project: projects) {
         for (auto &docPair: project.second) {
