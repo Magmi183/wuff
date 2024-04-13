@@ -5,6 +5,7 @@
 #include "Navigator.h"
 
 #include "../utils/utils.h"
+#include <algorithm>  // Include for std::find_if
 
 Navigator::Navigator(WooWooAnalyzer *analyzer) : Component(analyzer) {
     prepareQueries();
@@ -59,8 +60,14 @@ std::vector<Location> Navigator::findMetaBlockReferences(const ReferenceParams &
 
         auto s = ts_node_start_point(valueNode);
         auto e = ts_node_end_point(valueNode);
+        
+        auto metaKey = document->getMetaNodeText(mx, keyNode);
 
-        if (params.includeDeclaration) { //TODO: Add condition - that the key can possibly be referenced (i.e. is it valid to to include this as a declaration?)
+        // check if we should include declaration, and if this metaKey is referencable (dialect-specific behaviour)
+        if (params.includeDeclaration &&
+            std::any_of(analyzer->dialectManager->allReferences.begin(),
+                        analyzer->dialectManager->allReferences.end(),
+                        [&metaKey](const Reference& ref) { return ref.metaKey == metaKey; })) {
 
             Location l = {utils::pathToUri(document->documentPath), Range{{s.row + mx->lineOffset, s.column},
                                                                           {e.row + mx->lineOffset, e.column}}};
@@ -68,14 +75,12 @@ std::vector<Location> Navigator::findMetaBlockReferences(const ReferenceParams &
             locations.emplace_back(l);
         }
 
-        searchProjectForReferences(locations, document, Reference(document->getMetaNodeText(mx, keyNode)),
+        searchProjectForReferences(locations, document, Reference(metaKey),
                                    document->getMetaNodeText(mx, valueNode));
         return locations;
     } else {
         return {};
-
     }
-
 }
 
 void

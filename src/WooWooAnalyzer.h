@@ -42,7 +42,7 @@ public:
     WooWooAnalyzer();
     ~WooWooAnalyzer(); 
     void setDialect(const std::string& dialectPath);
-    bool loadWorkspace(const std::string& workspaceUri);
+    void loadWorkspace(const std::string& workspaceUri);
     DialectedWooWooDocument * getDocumentByUri(const std::string & docUri);
     DialectedWooWooDocument * getDocument(const std::string& pathToDoc);
     DialectManager* dialectManager;

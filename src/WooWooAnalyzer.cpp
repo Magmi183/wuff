@@ -49,29 +49,42 @@ void WooWooAnalyzer::setDialect(const std::string &dialectPath) {
     dialectManager = new DialectManager(dialectPath);
 }
 
-bool WooWooAnalyzer::loadWorkspace(const std::string &workspaceUri) {
+
+/**
+ * Loads all WooWoo documents from the specified workspace URI.
+ * 
+ * This function converts the workspace URI to a local path and scans the directory
+ * for project folders, loading any '.woo' files found within them. It also loads any
+ * standalone '.woo' files that are not part of any project folder.
+ * 
+ * @param workspaceUri The URI of the workspace to load documents from.
+ */
+void WooWooAnalyzer::loadWorkspace(const std::string &workspaceUri) {
+    // Convert URI to a local file system path
     workspaceRootPath = utils::uriToPathString(workspaceUri);
+
+    // Find all project folders within the workspace
     auto projectFolders = findProjectFolders(workspaceRootPath);
 
-    for (const fs::path &projectFolderPath: projectFolders) {
-        for (const auto &entry: fs::recursive_directory_iterator(projectFolderPath)) {
+    // Iterate over each project folder to find and load '.woo' files
+    for (const fs::path &projectFolderPath : projectFolders) {
+        for (const auto &entry : fs::recursive_directory_iterator(projectFolderPath)) {
             if (entry.is_regular_file() && entry.path().extension() == ".woo") {
                 loadDocument(projectFolderPath, entry.path());
             }
         }
     }
 
-    // now find and load all .woo files without a project
+    // Find and load all '.woo' files that are not part of any project
     auto wooFiles = findAllWooFiles(workspaceRootPath);
 
-    for (auto &wooFile: wooFiles) {
+    for (auto &wooFile : wooFiles) {
         if (!docToProject.contains(wooFile.string())) {
             loadDocument("", wooFile);
         }
     }
-
-    return true;
 }
+
 
 std::vector<fs::path> WooWooAnalyzer::findAllWooFiles(const fs::path &rootPath) {
     std::vector<fs::path> wooFiles;
@@ -162,8 +175,9 @@ std::vector<DialectedWooWooDocument *> WooWooAnalyzer::getDocumentsFromTheSamePr
             documents.emplace_back(pair.second);
         }
     } else {
-        // TODO: handle this
-        // std::cerr << "Project with path '" << project << "' not found in projects map." << std::endl;
+        // Should not ever happen; each existing WooWooDocument must be a part of project.
+        // If it is not actually part of project (determined by Woofile),
+        // it is associated an artifical project (docs without projects being grouped together)
     }
     return documents;
 }
@@ -174,19 +188,28 @@ void WooWooAnalyzer::handleDocumentChange(const TextDocumentIdentifier &tdi, std
     document->updateSource(source);
 }
 
+/**
+ * Handles renaming of files within the workspace and updates internal mappings and references.
+ * This function processes a list of file renames, updating the document paths and project associations.
+ * It supports renaming '.woo' files within their respective projects or to new locations, and also handles
+ * the cleanup of documents no longer recognized as '.woo' files after the rename.
+ *
+ * @param renames A list of pairs representing old and new URIs for the files being renamed.
+ * @return A WorkspaceEdit object that details the changes made to document references.
+ */
 WorkspaceEdit WooWooAnalyzer::renameFiles(const std::vector<std::pair<std::string, std::string>> &renames) {
     WorkspaceEdit we;
 
     std::vector<std::pair<std::string, std::string>> renamedDocuments;
-    for (const auto& fileRename: renames) {
-    
+    for (const auto& fileRename : renames) {
+
         auto oldUri = fileRename.first;
         auto newUri = fileRename.second;
         auto oldPath = utils::uriToPathString(oldUri);
         auto newPath = utils::uriToPathString(newUri);
 
         if (utils::endsWith(oldPath, ".woo") && utils::endsWith(newPath, ".woo")) {
-            // renaming a WooWoo file
+            // Handle renaming of WooWoo files within the same or to a different project
             std::optional<fs::path> newProjectFolder = findProjectFolder(newUri);
             std::string oldProjectFolder = docToProject[oldPath];
             std::string newProjectFolderPathString = newProjectFolder.has_value()
@@ -197,35 +220,42 @@ WorkspaceEdit WooWooAnalyzer::renameFiles(const std::vector<std::pair<std::strin
             projects[newProjectFolderPathString][newPath] = projects[oldProjectFolder][oldPath];
             projects[oldProjectFolder].erase(oldPath);
             projects[newProjectFolderPathString][newPath]->documentPath = fs::path(newPath);
-            
+
             renamedDocuments.emplace_back(oldPath, newPath);
 
         } else if (utils::endsWith(oldPath, ".woo")) {
-            // the file was a WooWoo document, but now it is no longer a WooWoo document
+            // Handle the case where a '.woo' document is renamed to a non-WooWoo format
             deleteDocument(oldPath);
         } else {
-            // TODO
+            // Handle renaming of non-WooWoo files or conversion of non-WooWoo to '.woo' files
+            // These are handled elsewhere as new documents through openDocument
         }
     }
-    
-    // analyzer state is updated, now refactor file references (includes)
+
+    // After updating the internal state, refactor the document references to reflect the new file paths
     return navigator->refactorDocumentReferences(renamedDocuments);
-    
 }
 
 
+
+/**
+ * Processes deletions of files as notified by the client. This function currently handles the deletion
+ * of individual document files by removing them from the internal state and associated data structures.
+ * It does not handle the deletion of folders or Woofile files yet.
+ *
+ * @param uris A list of URIs for the files that have been deleted.
+ */
 void WooWooAnalyzer::didDeleteFiles(const std::vector<std::string> &uris) {
-    // TODO: Handle Woofile + folders deletion
     for (const auto &deletedFileUri: uris) {
 
         auto doc = getDocumentByUri(deletedFileUri);
         if (doc) {
             deleteDocument(doc);
         }
-
     }
-
+    // NOTE: This function does not yet handle the deletion of folders or Woofiles.
 }
+
 
 void WooWooAnalyzer::deleteDocument(const std::string &uri) {
     auto doc = getDocumentByUri(uri);
