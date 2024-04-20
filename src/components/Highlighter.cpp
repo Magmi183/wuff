@@ -13,8 +13,8 @@ Highlighter::Highlighter(WooWooAnalyzer *analyzer) : Component(analyzer) {
 }
 
 
-std::vector<int> Highlighter::semanticTokens(const std::string &docUri) {
-    auto documentPath = utils::uriToPathString(docUri);
+std::vector<int> Highlighter::semanticTokens(const TextDocumentIdentifier &tdi) {
+    auto documentPath = utils::uriToPathString(tdi.uri);
     WooWooDocument *document = analyzer->getDocument(documentPath);
 
     std::vector<int> data;

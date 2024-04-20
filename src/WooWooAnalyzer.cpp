@@ -274,12 +274,12 @@ void WooWooAnalyzer::deleteDocument(WooWooDocument *document) {
 
 // - LSP-like public interface - - -
 
-std::string WooWooAnalyzer::hover(const std::string &docUri, int line, int character) {
-    return hoverer->hover(docUri, line, character);
+std::string WooWooAnalyzer::hover(const TextDocumentPositionParams &params) {
+    return hoverer->hover(params);
 }
 
-std::vector<int> WooWooAnalyzer::semanticTokens(const std::string &docUri) {
-    return highlighter->semanticTokens(docUri);
+std::vector<int> WooWooAnalyzer::semanticTokens(const TextDocumentIdentifier &tdi) {
+    return highlighter->semanticTokens(tdi);
 }
 
 Location WooWooAnalyzer::goToDefinition(const DefinitionParams &params) {

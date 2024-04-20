@@ -35,7 +35,7 @@ class Highlighter : Component {
 public:
     Highlighter(WooWooAnalyzer * analyzer);
     
-    std::vector<int> semanticTokens(const std::string& docUri);
+    std::vector<int> semanticTokens(const TextDocumentIdentifier &tdi);
     
     void setTokenTypes(std::vector<std::string>);
     void setTokenModifiers (std::vector<std::string>);

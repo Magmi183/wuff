@@ -11,15 +11,13 @@ Hoverer::Hoverer(WooWooAnalyzer *analyzer) : Component(analyzer) {
 }
 
 
-std::string Hoverer::hover(const std::string &docUri, uint32_t line, uint32_t character) {
-    WooWooDocument *document = analyzer->getDocumentByUri(docUri);
-    auto pos = document->utfMappings->utf16ToUtf8(line, character);
-    line = pos.first;
-    character = pos.second;
-
+std::string Hoverer::hover(const TextDocumentPositionParams &params) {
+    WooWooDocument *document = analyzer->getDocumentByUri(params.textDocument.uri);
+    auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
+    
     TSQueryCursor *cursor = ts_query_cursor_new();
-    TSPoint start_point = {line, character};
-    TSPoint end_point = {line, character + 1};
+    TSPoint start_point = {pos.first, pos.second};
+    TSPoint end_point = {pos.first, pos.second + 1};
     ts_query_cursor_set_point_range(cursor, start_point, end_point);
     ts_query_cursor_exec(cursor, queries[hoverableNodesQuery], ts_tree_root_node(document->tree));
 

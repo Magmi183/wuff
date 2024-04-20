@@ -50,8 +50,8 @@ public:
     std::vector<DialectedWooWooDocument *> getDocumentsFromTheSameProject(WooWooDocument * document);
     
     // LSP-like functionalities
-    std::string hover(const std::string& docUri, int line, int character);
-    std::vector<int> semanticTokens(const std::string& docUri);
+    std::string hover(const TextDocumentPositionParams &params);
+    std::vector<int> semanticTokens(const TextDocumentIdentifier & tdi);
     Location goToDefinition(const DefinitionParams& params);
     std::vector<CompletionItem> complete(const CompletionParams & params);
     std::vector<Location> references(const ReferenceParams & params);
