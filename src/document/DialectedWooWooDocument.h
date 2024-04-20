@@ -20,7 +20,7 @@ public:
     DialectedWooWooDocument(const fs::path& documentPath1, Parser* parser1, DialectManager * dialectManager);
 
     
-    virtual ~DialectedWooWooDocument();
+    ~DialectedWooWooDocument() override;
     std::vector<std::pair<MetaContext *, TSNode>> getReferencablesBy(const std::string& referencingTypeName);
     void updateSource(std::string &source) override;
 

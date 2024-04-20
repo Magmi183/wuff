@@ -132,10 +132,10 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="wuff",
-    version="1.1.3",
+    version="1.1.4",
     author="Michal Janecek",
     author_email="michal.janecek@gmail.com",
-    description="Analyzer tools for WooWoo projects",
+    description="Analysis engine for WooWoo workspaces.",
     long_description=long_description,
     long_description_content_type='text/markdown',
     ext_modules=[CMakeExtension("wuff")],

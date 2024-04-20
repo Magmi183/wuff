@@ -10,8 +10,8 @@
 class IDescribable {
 public:
     virtual ~IDescribable() = default;
-    virtual std::string getDescription() const = 0;
-    virtual std::string getName() const = 0;
+    [[nodiscard]] virtual std::string getDescription() const = 0;
+    [[nodiscard]] virtual std::string getName() const = 0;
 };
 
 #endif //WUFF_IDESCRIBABLE_H

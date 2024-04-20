@@ -177,7 +177,7 @@ std::vector<DialectedWooWooDocument *> WooWooAnalyzer::getDocumentsFromTheSamePr
     } else {
         // Should not ever happen; each existing WooWooDocument must be a part of project.
         // If it is not actually part of project (determined by Woofile),
-        // it is associated an artifical project (docs without projects being grouped together)
+        // it is associated an artificial project (docs without projects being grouped together)
     }
     return documents;
 }

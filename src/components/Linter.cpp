@@ -13,7 +13,7 @@ std::vector<Diagnostic> Linter::diagnose(const TextDocumentIdentifier &tdi) {
     auto doc = analyzer->getDocumentByUri(tdi.uri);
 
     std::vector<Diagnostic> diagnostics;
-    diagnoseErrors(doc, diagnostics);;
+    diagnoseErrors(doc, diagnostics);
     diagnoseMissingNodes(doc, diagnostics);
     
     return diagnostics;

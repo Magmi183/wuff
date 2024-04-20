@@ -33,7 +33,7 @@ void Component::prepareQueries() {
 }
 
 Component::~Component() {
-    for (auto query: queries) {
+    for (const auto& query: queries) {
         ts_query_delete(query.second);
     }
 }

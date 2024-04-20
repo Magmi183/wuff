@@ -52,7 +52,7 @@ std::vector<int> Highlighter::semanticTokens(const TextDocumentIdentifier &tdi) 
     // Filtering
     std::vector<NodeInfo> unique;
     std::unordered_map<std::pair<int, int>, bool, pairHash> seen;
-    for (NodeInfo nodeInfo: nodes) {
+    for (const NodeInfo& nodeInfo: nodes) {
         std::pair<int, int> startPoint = document->utfMappings->utf8ToUtf16(nodeInfo.startPoint.row,
                                                                             nodeInfo.startPoint.column);
         if (seen.find(startPoint) == seen.end()) {
