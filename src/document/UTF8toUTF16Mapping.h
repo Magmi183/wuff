@@ -23,6 +23,7 @@ public:
     [[nodiscard]] std::pair<uint32_t, uint32_t> utf16ToUtf8(uint32_t lineNum, uint32_t utf16Offset) const;
 
     void utf8ToUtf16(Location & loc) const;
+    void utf8ToUtf16(Range & r) const;
 
 private:
     std::vector<std::unordered_map<uint32_t, uint32_t>> utf8ToUtf16Mappings;

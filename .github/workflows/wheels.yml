@@ -34,22 +34,24 @@ jobs:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
         # from: https://github.com/pypa/cibuildwheel/blob/main/examples/github-deploy.yml
-        os: [ ubuntu-latest, windows-latest, macos-13, macos-14 ]
+        #os: [ ubuntu-latest, windows-latest, macos-13, macos-14 ]
+        os: [ ubuntu-latest, windows-latest, macos-14 ]
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: pypa/cibuildwheel@v2.17
+      - uses: pypa/cibuildwheel@v2.19
 
       - name: Verify clean directory
         run: git diff --exit-code
         shell: bash
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: wheelhouse/*.whl
 
 
@@ -64,10 +66,11 @@ jobs:
         with:
           python-version: "3.x"
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          pattern: cibw-*
           path: dist
+          merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:

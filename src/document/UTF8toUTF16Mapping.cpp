@@ -82,7 +82,7 @@ uint32_t UTF8toUTF16Mapping::utf8ToCodePoint(const std::string& utf8, uint32_t &
 
 
 std::pair<uint32_t, uint32_t> UTF8toUTF16Mapping::utf8ToUtf16(uint32_t lineNum, uint32_t utf8Offset) const {
-    if (lineNum >= 0 && lineNum < utf8ToUtf16Mappings.size()) {
+    if (lineNum < utf8ToUtf16Mappings.size()) {
         const auto& mapping = utf8ToUtf16Mappings[lineNum];
         auto it = mapping.find(utf8Offset);
         if (it != mapping.end()) {
@@ -94,7 +94,7 @@ std::pair<uint32_t, uint32_t> UTF8toUTF16Mapping::utf8ToUtf16(uint32_t lineNum, 
 }
 
 std::pair<uint32_t, uint32_t> UTF8toUTF16Mapping::utf16ToUtf8(uint32_t lineNum, uint32_t utf16Offset) const {
-    if (lineNum >= 0 && lineNum < utf16ToUtf8Mappings.size()) {
+    if (lineNum < utf16ToUtf8Mappings.size()) {
         const auto& mapping = utf16ToUtf8Mappings[lineNum];
         auto it = mapping.find(utf16Offset);
         if (it != mapping.end()) {
@@ -106,16 +106,20 @@ std::pair<uint32_t, uint32_t> UTF8toUTF16Mapping::utf16ToUtf8(uint32_t lineNum, 
 }
 
 void UTF8toUTF16Mapping::utf8ToUtf16(Location & loc) const{
-    auto startLine = loc.range.start.line;
-    auto startCol = loc.range.start.character;
-    auto endLine = loc.range.end.line;
-    auto endCol = loc.range.end.character;
-    
+    utf8ToUtf16(loc.range);
+}
+
+void UTF8toUTF16Mapping::utf8ToUtf16(Range & range) const{
+    auto startLine = range.start.line;
+    auto startCol = range.start.character;
+    auto endLine = range.end.line;
+    auto endCol = range.end.character;
+
     auto transStart = utf8ToUtf16(startLine, startCol);
     auto transEnd = utf8ToUtf16(endLine, endCol);
-    
-    loc.range.start.line = transStart.first;
-    loc.range.start.character = transStart.second;
-    loc.range.end.line = transEnd.first;
-    loc.range.end.character = transEnd.second;
+
+    range.start.line = transStart.first;
+    range.start.character = transStart.second;
+    range.end.line = transEnd.first;
+    range.end.character = transEnd.second;
 }
