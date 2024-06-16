@@ -8,7 +8,7 @@
 #include <utility>
 
 
-WooWooDocument::WooWooDocument(fs::path documentPath, Parser *parser) : parser(parser), documentPath(std::move(documentPath)) {
+WooWooDocument::WooWooDocument(fs::path documentPath) : documentPath(std::move(documentPath)) {
     utfMappings = new UTF8toUTF16Mapping();
     updateSource();
 }
@@ -30,8 +30,8 @@ void WooWooDocument::updateSource() {
 void WooWooDocument::updateSource(std::string &newSource) {
     this->source = std::move(newSource);
     deleteCommentsAndMetas();
-    tree = parser->parseWooWoo(source);
-    metaBlocks = parser->parseMetas(tree, source);
+    tree = Parser::getInstance()->parseWooWoo(source);
+    metaBlocks = Parser::getInstance()->parseMetas(tree, source);
     utfMappings->buildMappings(source);
     updateComments();
 }

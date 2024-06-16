@@ -7,6 +7,16 @@
 #include <cstring>
 #include "../utils/utils.h"
 
+std::unique_ptr<Parser> Parser::instance;
+std::once_flag Parser::initInstanceFlag;
+
+Parser* Parser::getInstance() {
+    std::call_once(initInstanceFlag, []() {
+        instance.reset(new Parser());
+    });
+    return instance.get();
+}
+
 
 Parser::Parser() : WooWooParser(ts_parser_new()), YAMLParser(ts_parser_new()) {
     ts_parser_set_language(WooWooParser, tree_sitter_woowoo());

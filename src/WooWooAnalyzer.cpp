@@ -20,7 +20,6 @@
 #include "utils/utils.h"
 
 WooWooAnalyzer::WooWooAnalyzer() : dialectManager(nullptr) {
-    parser = new Parser();
     highlighter = new Highlighter(this);
     hoverer = new Hoverer(this);
     navigator = new Navigator(this);
@@ -30,7 +29,6 @@ WooWooAnalyzer::WooWooAnalyzer() : dialectManager(nullptr) {
 }
 
 WooWooAnalyzer::~WooWooAnalyzer() {
-    delete parser;
     delete highlighter;
     delete hoverer;
     delete navigator;
@@ -67,8 +65,8 @@ void WooWooAnalyzer::loadWorkspace(const std::string &workspaceUri) {
     auto projectFolders = findProjectFolders(workspaceRootPath);
 
     // Iterate over each project folder to find and load '.woo' files
-    for (const fs::path &projectFolderPath : projectFolders) {
-        for (const auto &entry : fs::recursive_directory_iterator(projectFolderPath)) {
+    for (const fs::path &projectFolderPath: projectFolders) {
+        for (const auto &entry: fs::recursive_directory_iterator(projectFolderPath)) {
             if (entry.is_regular_file() && entry.path().extension() == ".woo") {
                 loadDocument(projectFolderPath, entry.path());
             }
@@ -78,7 +76,7 @@ void WooWooAnalyzer::loadWorkspace(const std::string &workspaceUri) {
     // Find and load all '.woo' files that are not part of any project
     auto wooFiles = findAllWooFiles(workspaceRootPath);
 
-    for (auto &wooFile : wooFiles) {
+    for (auto &wooFile: wooFiles) {
         if (!docToProject.contains(wooFile.string())) {
             loadDocument("", wooFile);
         }
@@ -133,7 +131,6 @@ std::optional<fs::path> WooWooAnalyzer::findProjectFolder(const std::string &uri
 
 void WooWooAnalyzer::loadDocument(const fs::path &projectPath, const fs::path &documentPath) {
     projects[projectPath.generic_string()][documentPath.generic_string()] = new DialectedWooWooDocument(documentPath,
-                                                                                                        parser,
                                                                                                         dialectManager);
     docToProject[documentPath.generic_string()] = projectPath.generic_string();
 }
@@ -201,7 +198,7 @@ WorkspaceEdit WooWooAnalyzer::renameFiles(const std::vector<std::pair<std::strin
     WorkspaceEdit we;
 
     std::vector<std::pair<std::string, std::string>> renamedDocuments;
-    for (const auto& fileRename : renames) {
+    for (const auto &fileRename: renames) {
 
         auto oldUri = fileRename.first;
         auto newUri = fileRename.second;
@@ -235,7 +232,6 @@ WorkspaceEdit WooWooAnalyzer::renameFiles(const std::vector<std::pair<std::strin
     // After updating the internal state, refactor the document references to reflect the new file paths
     return navigator->refactorDocumentReferences(renamedDocuments);
 }
-
 
 
 /**

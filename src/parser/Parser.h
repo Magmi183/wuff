@@ -16,13 +16,17 @@ extern "C" TSLanguage* tree_sitter_yaml();
 
 class Parser {
 public:
-    Parser();
     ~Parser();
     TSTree* parseWooWoo(const std::string& source);
     TSTree* parseYaml(const std::string& source);
     std::vector<MetaContext *> parseMetas(TSTree * WooWooTree, const std::string& source);
+    static Parser * getInstance();
 
 private:
+    Parser();
+    static std::unique_ptr<Parser> instance;
+    static std::once_flag initInstanceFlag;
+
     TSParser* WooWooParser;
     TSParser* YAMLParser;
     

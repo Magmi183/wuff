@@ -30,7 +30,6 @@ class WooWooAnalyzer {
 private:
     std::unordered_map<std::string, std::unordered_map<std::string, DialectedWooWooDocument*>> projects;
     std::unordered_map<std::string, std::string> docToProject;
-    Parser* parser;
     Hoverer* hoverer;
     Highlighter* highlighter;
     Navigator * navigator;

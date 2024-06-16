@@ -6,9 +6,9 @@
 #include <algorithm>
 #include "../utils/utils.h"
 
-DialectedWooWooDocument::DialectedWooWooDocument(const fs::path &documentPath1, Parser *parser1,
+DialectedWooWooDocument::DialectedWooWooDocument(const fs::path &documentPath1,
                                                  DialectManager *dialectManager)
-        : WooWooDocument(documentPath1, parser1), dialectManager(dialectManager) {
+        : WooWooDocument(documentPath1), dialectManager(dialectManager) {
     prepareQueries();
     index();
 }

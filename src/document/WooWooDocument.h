@@ -23,13 +23,12 @@ public:
     TSTree* tree;
     std::vector<MetaContext *> metaBlocks;
     std::vector<CommentLine *> commentLines;
-    Parser * parser;
     UTF8toUTF16Mapping * utfMappings;
 
     fs::path documentPath;
     std::string source;
     
-    WooWooDocument(fs::path documentPath1, Parser * parser1);
+    WooWooDocument(fs::path documentPath1);
     virtual ~WooWooDocument();
 
     void updateSource();

@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 class DialectedWooWooDocument : public WooWooDocument {
 public:
     
-    DialectedWooWooDocument(const fs::path& documentPath1, Parser* parser1, DialectManager * dialectManager);
+    DialectedWooWooDocument(const fs::path& documentPath1, DialectManager * dialectManager);
 
     
     ~DialectedWooWooDocument() override;
