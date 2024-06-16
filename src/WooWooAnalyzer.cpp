@@ -71,7 +71,6 @@ void WooWooAnalyzer::loadWorkspace(const std::string &workspaceUri) {
                 loadDocument(projectFolderPath, entry.path());
             }
         }
-    }
 
     // Find and load all '.woo' files that are not part of any project
     auto wooFiles = findAllWooFiles(workspaceRootPath);
@@ -133,6 +132,7 @@ void WooWooAnalyzer::loadDocument(const fs::path &projectPath, const fs::path &d
     projects[projectPath.generic_string()][documentPath.generic_string()] = new DialectedWooWooDocument(documentPath);
     docToProject[documentPath.generic_string()] = projectPath.generic_string();
 }
+
 
 DialectedWooWooDocument *WooWooAnalyzer::getDocumentByUri(const std::string &docUri) {
     auto path = utils::uriToPathString(docUri);

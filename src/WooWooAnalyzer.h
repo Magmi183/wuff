@@ -13,6 +13,7 @@
 #include "document/DialectedWooWooDocument.h"
 #include "parser/Parser.h"
 #include "lsp/LSPTypes.h"
+#include "document/WooWooProject.h"
 
 class Hoverer;
 class Highlighter;
@@ -27,7 +28,7 @@ namespace py = pybind11;
 
 class WooWooAnalyzer {
 private:
-    std::unordered_map<std::string, std::unordered_map<std::string, DialectedWooWooDocument*>> projects;
+    std::unordered_map<std::string, WooWooProject *> projects;
     std::unordered_map<std::string, std::string> docToProject;
     Hoverer* hoverer;
     Highlighter* highlighter;
