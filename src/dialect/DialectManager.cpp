@@ -5,10 +5,15 @@
 #include "DialectManager.h"
 #include "yaml-cpp/yaml.h"
 
-DialectManager::DialectManager(const std::string &dialectFilePath) {
-    if (!dialectFilePath.empty()) {
-        loadDialect(dialectFilePath);
-    }
+
+std::unique_ptr<DialectManager> DialectManager::instance;
+std::once_flag DialectManager::initInstanceFlag;
+
+DialectManager* DialectManager::getInstance() {
+    std::call_once(initInstanceFlag, []() {
+        instance.reset(new DialectManager());
+    });
+    return instance.get();
 }
 
 

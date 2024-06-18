@@ -19,7 +19,7 @@
 
 #include "utils/utils.h"
 
-WooWooAnalyzer::WooWooAnalyzer() : dialectManager(nullptr) {
+WooWooAnalyzer::WooWooAnalyzer() {
     highlighter = new Highlighter(this);
     hoverer = new Hoverer(this);
     navigator = new Navigator(this);
@@ -44,7 +44,7 @@ WooWooAnalyzer::~WooWooAnalyzer() {
 }
 
 void WooWooAnalyzer::setDialect(const std::string &dialectPath) {
-    dialectManager = new DialectManager(dialectPath);
+    DialectManager::getInstance()->loadDialect(dialectPath);
 }
 
 
@@ -130,8 +130,7 @@ std::optional<fs::path> WooWooAnalyzer::findProjectFolder(const std::string &uri
 }
 
 void WooWooAnalyzer::loadDocument(const fs::path &projectPath, const fs::path &documentPath) {
-    projects[projectPath.generic_string()][documentPath.generic_string()] = new DialectedWooWooDocument(documentPath,
-                                                                                                        dialectManager);
+    projects[projectPath.generic_string()][documentPath.generic_string()] = new DialectedWooWooDocument(documentPath);
     docToProject[documentPath.generic_string()] = projectPath.generic_string();
 }
 

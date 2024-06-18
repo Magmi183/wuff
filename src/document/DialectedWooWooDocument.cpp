@@ -6,9 +6,8 @@
 #include <algorithm>
 #include "../utils/utils.h"
 
-DialectedWooWooDocument::DialectedWooWooDocument(const fs::path &documentPath1,
-                                                 DialectManager *dialectManager)
-        : WooWooDocument(documentPath1), dialectManager(dialectManager) {
+DialectedWooWooDocument::DialectedWooWooDocument(const fs::path &documentPath1)
+        : WooWooDocument(documentPath1) {
     prepareQueries();
     index();
 }
@@ -50,8 +49,8 @@ void DialectedWooWooDocument::prepareQueries() {
 void DialectedWooWooDocument::index() {
     referencablesByNode.clear();
     referencableNodes.clear();
-    for (const std::string &typeName: dialectManager->getReferencingTypeNames()) {
-        for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName(typeName)) {
+    for (const std::string &typeName: DialectManager::getInstance()->getReferencingTypeNames()) {
+        for (const Reference &ref: DialectManager::getInstance()->getPossibleReferencesByTypeName(typeName)) {
 
             // create if not exist
             referencableNodes[ref];
@@ -104,7 +103,7 @@ void DialectedWooWooDocument::index() {
 
 std::vector<std::pair<MetaContext *, TSNode> > DialectedWooWooDocument::getReferencablesBy(
         const std::string &referencingTypeName) {
-    auto refTypes = dialectManager->getReferencingTypeNames();
+    auto refTypes = DialectManager::getInstance()->getReferencingTypeNames();
     if (std::find(refTypes.begin(), refTypes.end(), referencingTypeName) == refTypes.end()) {
         return {};
     }
@@ -161,7 +160,7 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
                 } else if (valueCaptureNameStr == "key") {
                     auto metaFieldKey = getMetaNodeText(mx, capturedNode);
 
-                    for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName(metaFieldKey)) {
+                    for (const Reference &ref: DialectManager::getInstance()->getPossibleReferencesByTypeName(metaFieldKey)) {
                         if (ref.metaKey == reference.metaKey) {
                             correctKey = true;
                         }
@@ -213,7 +212,7 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
                 if (value != referenceValue) continue;
                 auto shortInnerEnvironmentType = utils::getChildText(node, "short_inner_environment_type", this);
 
-                for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName(shortInnerEnvironmentType)) {
+                for (const Reference &ref: DialectManager::getInstance()->getPossibleReferencesByTypeName(shortInnerEnvironmentType)) {
                     if (ref.metaKey == reference.metaKey) {
                         Location l = {utils::pathToUri(documentPath), Range{{s.row, s.column},
                                                                             {e.row, e.column}}};
@@ -228,7 +227,7 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
                 auto e = ts_node_end_point(node);
                 if (nodeText != referenceValue) continue;
 
-                for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName("#")) {
+                for (const Reference &ref: DialectManager::getInstance()->getPossibleReferencesByTypeName("#")) {
                     if (ref.metaKey == reference.metaKey) {
                         Location l = {utils::pathToUri(documentPath), Range{{s.row, s.column},
                                                                             {e.row, e.column}}};
@@ -242,7 +241,7 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
                 auto e = ts_node_end_point(node);
                 if (nodeText != referenceValue) continue;
 
-                for (const Reference &ref: dialectManager->getPossibleReferencesByTypeName("@")) {
+                for (const Reference &ref: DialectManager::getInstance()->getPossibleReferencesByTypeName("@")) {
                     if (ref.metaKey == reference.metaKey) {
                         Location l = {utils::pathToUri(documentPath), Range{{s.row, s.column},
                                                                             {e.row, e.column}}};

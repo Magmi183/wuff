@@ -12,7 +12,6 @@
 #include <pybind11/pytypes.h>
 #include "document/DialectedWooWooDocument.h"
 #include "parser/Parser.h"
-#include "dialect/DialectManager.h"
 #include "lsp/LSPTypes.h"
 
 class Hoverer;
@@ -44,7 +43,6 @@ public:
     void loadWorkspace(const std::string& workspaceUri);
     DialectedWooWooDocument * getDocumentByUri(const std::string & docUri);
     DialectedWooWooDocument * getDocument(const std::string& pathToDoc);
-    DialectManager* dialectManager;
     
     std::vector<DialectedWooWooDocument *> getDocumentsFromTheSameProject(WooWooDocument * document);
     

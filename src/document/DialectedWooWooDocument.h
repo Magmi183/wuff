@@ -17,7 +17,7 @@ namespace fs = std::filesystem;
 class DialectedWooWooDocument : public WooWooDocument {
 public:
     
-    DialectedWooWooDocument(const fs::path& documentPath1, DialectManager * dialectManager);
+    DialectedWooWooDocument(const fs::path& documentPath1);
 
     
     ~DialectedWooWooDocument() override;
@@ -27,8 +27,6 @@ public:
     std::optional<std::pair<MetaContext *, TSNode>> findReferencable(const std::vector<Reference> & references, const std::string & referenceValue);
     
     std::vector<Location> findLocationsOfReferences(const Reference & reference, const std::string & referenceValue);
-    
-    DialectManager * dialectManager;
     
 
 private:

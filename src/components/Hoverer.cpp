@@ -34,7 +34,7 @@ std::string Hoverer::hover(const TextDocumentPositionParams &params) {
     }
 
     ts_query_cursor_delete(cursor);
-    return analyzer->dialectManager->getDescription(nodeType, nodeText);
+    return DialectManager::getInstance()->getDescription(nodeType, nodeText);
 }
 
 const std::unordered_map <std::string, std::pair<TSLanguage *, std::string>> &Hoverer::getQueryStringByName() const {

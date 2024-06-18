@@ -65,8 +65,8 @@ std::vector<Location> Navigator::findMetaBlockReferences(const ReferenceParams &
 
         // check if we should include declaration, and if this metaKey is referencable (dialect-specific behaviour)
         if (params.includeDeclaration &&
-            std::any_of(analyzer->dialectManager->allReferences.begin(),
-                        analyzer->dialectManager->allReferences.end(),
+            std::any_of(DialectManager::getInstance()->allReferences.begin(),
+                        DialectManager::getInstance()->allReferences.end(),
                         [&metaKey](const Reference& ref) { return ref.metaKey == metaKey; })) {
 
             Location l = {utils::pathToUri(document->documentPath), Range{{s.row + mx->lineOffset, s.column},
@@ -170,7 +170,7 @@ Location Navigator::resolveShortInnerEnvironmentReference(const DefinitionParams
     auto shortInnerEnvironmentType = utils::getChildText(node, "short_inner_environment_type", document);
 
     // obtain what can be referenced by this environment
-    std::vector<Reference> referenceTargets = document->dialectManager->getPossibleReferencesByTypeName(
+    std::vector<Reference> referenceTargets = DialectManager::getInstance()->getPossibleReferencesByTypeName(
             shortInnerEnvironmentType);
 
     // obtain the body part of the referencing environment 
@@ -184,7 +184,7 @@ Navigator::resolveShorthandReference(const std::string &shorthandType, const Def
     auto document = analyzer->getDocumentByUri(params.textDocument.uri);
 
     // obtain what can be referenced by this environment
-    std::vector<Reference> referenceTargets = document->dialectManager->getPossibleReferencesByTypeName(shorthandType);
+    std::vector<Reference> referenceTargets = DialectManager::getInstance()->getPossibleReferencesByTypeName(shorthandType);
 
     return findReference(params, referenceTargets, document->getNodeText(node));
 }
@@ -243,7 +243,7 @@ Location Navigator::resolveMetaBlockReference(const DefinitionParams &params) {
         auto keyNode = metaFieldContext->second.first;
         auto valueNode = metaFieldContext->second.second;
         auto document = analyzer->getDocumentByUri(params.textDocument.uri);
-        return findReference(params, document->dialectManager->getPossibleReferencesByTypeName(
+        return findReference(params, DialectManager::getInstance()->getPossibleReferencesByTypeName(
                                      document->getMetaNodeText(mx, keyNode)),
                              document->getMetaNodeText(mx, valueNode));
     } else {

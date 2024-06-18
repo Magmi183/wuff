@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
+#include <mutex>
 
 extern "C" TSLanguage* tree_sitter_woowoo();
 extern "C" TSLanguage* tree_sitter_yaml();
