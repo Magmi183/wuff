@@ -12,7 +12,7 @@ Hoverer::Hoverer(WooWooAnalyzer *analyzer) : Component(analyzer) {
 
 
 std::string Hoverer::hover(const TextDocumentPositionParams &params) {
-    WooWooDocument *document = analyzer->getDocumentByUri(params.textDocument.uri);
+    auto document = analyzer->getDocumentByUri(params.textDocument.uri);
     auto pos = document->utfMappings->utf16ToUtf8(params.position.line, params.position.character);
     
     TSQueryCursor *cursor = ts_query_cursor_new();

@@ -28,8 +28,7 @@ namespace py = pybind11;
 
 class WooWooAnalyzer {
 private:
-    std::unordered_map<std::string, WooWooProject *> projects;
-    std::unordered_map<std::string, std::string> docToProject;
+    std::set<WooWooProject *> projects;
     Hoverer* hoverer;
     Highlighter* highlighter;
     Navigator * navigator;
@@ -45,8 +44,9 @@ public:
     DialectedWooWooDocument * getDocumentByUri(const std::string & docUri);
     DialectedWooWooDocument * getDocument(const std::string& pathToDoc);
     
-    std::vector<DialectedWooWooDocument *> getDocumentsFromTheSameProject(WooWooDocument * document);
-    
+    WooWooProject * getProjectByDocument(WooWooDocument * document);
+    WooWooProject * getProject(const std::optional<fs::path> &path);
+
     // LSP-like functionalities
     std::string hover(const TextDocumentPositionParams &params);
     std::vector<int> semanticTokens(const TextDocumentIdentifier & tdi);
@@ -71,11 +71,10 @@ private:
     std::vector<fs::path> findProjectFolders(const fs::path& rootPath);
     std::optional<fs::path> findProjectFolder(const std::string& uri);
     
-    void loadDocument(const fs::path& projectPath, const fs::path& documentPath);
-    void deleteDocument(WooWooDocument * document);
+    void deleteDocument(DialectedWooWooDocument * document);
     void deleteDocument(const std::string & uri);
     void handleDocumentChange(const TextDocumentIdentifier & tdi, std::string & source);
-    static std::vector<fs::path> findAllWooFiles(const fs::path  & rootPath);
+    static std::set<fs::path> findAllWooFiles(const fs::path  & rootPath);
 
     fs::path workspaceRootPath;
 };

@@ -37,9 +37,7 @@ WooWooAnalyzer::~WooWooAnalyzer() {
     delete folder;
 
     for (auto &project: projects) {
-        for (auto &docPair: project.second) {
-            delete docPair.second;
-        }
+        delete project;
     }
 }
 
@@ -64,32 +62,38 @@ void WooWooAnalyzer::loadWorkspace(const std::string &workspaceUri) {
     // Find all project folders within the workspace
     auto projectFolders = findProjectFolders(workspaceRootPath);
 
-    // Iterate over each project folder to find and load '.woo' files
     for (const fs::path &projectFolderPath: projectFolders) {
-        for (const auto &entry: fs::recursive_directory_iterator(projectFolderPath)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".woo") {
-                loadDocument(projectFolderPath, entry.path());
+        projects.insert(new WooWooProject(projectFolderPath));
+    }
+
+    // Project for unassigned documents
+    auto nullProject = new WooWooProject();
+    projects.insert(nullProject);
+    
+    // Find and load all '.woo' files that are not part of any project
+    auto woowooFiles = findAllWooFiles(workspaceRootPath);
+
+    for (auto &woowooFile: woowooFiles) {
+        bool partOfProject = false;
+        for (auto &project: projects) {
+            if (project->getDocument(woowooFile.generic_string())) {
+                partOfProject = true;
             }
         }
-
-    // Find and load all '.woo' files that are not part of any project
-    auto wooFiles = findAllWooFiles(workspaceRootPath);
-
-    for (auto &wooFile: wooFiles) {
-        if (!docToProject.contains(wooFile.string())) {
-            loadDocument("", wooFile);
-        }
+        if (!partOfProject)
+            nullProject->loadDocument(woowooFile);
     }
+
 }
 
 
-std::vector<fs::path> WooWooAnalyzer::findAllWooFiles(const fs::path &rootPath) {
-    std::vector<fs::path> wooFiles;
+std::set<fs::path> WooWooAnalyzer::findAllWooFiles(const fs::path &rootPath) {
+    std::set<fs::path> wooFiles;
 
     if (fs::exists(rootPath) && fs::is_directory(rootPath)) {
         for (const auto &entry: fs::recursive_directory_iterator(rootPath)) {
             if (entry.is_regular_file() && entry.path().extension() == ".woo") {
-                wooFiles.push_back(entry.path());
+                wooFiles.insert(entry.path());
             }
         }
     }
@@ -128,55 +132,34 @@ std::optional<fs::path> WooWooAnalyzer::findProjectFolder(const std::string &uri
     return std::nullopt; // no project folder found
 }
 
-void WooWooAnalyzer::loadDocument(const fs::path &projectPath, const fs::path &documentPath) {
-    projects[projectPath.generic_string()][documentPath.generic_string()] = new DialectedWooWooDocument(documentPath);
-    docToProject[documentPath.generic_string()] = projectPath.generic_string();
-}
-
-
-DialectedWooWooDocument *WooWooAnalyzer::getDocumentByUri(const std::string &docUri) {
+DialectedWooWooDocument * WooWooAnalyzer::getDocumentByUri(const std::string &docUri) {
     auto path = utils::uriToPathString(docUri);
     return getDocument(path);
 }
 
-DialectedWooWooDocument *WooWooAnalyzer::getDocument(const std::string &pathToDoc) {
-    auto projectIter = docToProject.find(pathToDoc);
-    if (projectIter == docToProject.end()) {
-        // Document is not present in docToProject map
-        // Meaning it is unknown to the analyzer
-        return nullptr;
+DialectedWooWooDocument * WooWooAnalyzer::getDocument(const std::string &pathToDoc) {
+
+    for (auto &project: projects) {
+        auto doc = project->getDocument(pathToDoc);
+        if (doc)
+            return doc;
     }
 
-    const auto &projectName = projectIter->second;
-    auto &projectMap = projects[projectName];
-
-    auto docIter = projectMap.find(pathToDoc);
-    if (docIter == projectMap.end()) {
-        // Document is not present in the projects map for the given project
-        // Should not ever happen
-        return nullptr;
-    }
-
-    return docIter->second;
+    return nullptr;
 }
 
 
-std::vector<DialectedWooWooDocument *> WooWooAnalyzer::getDocumentsFromTheSameProject(WooWooDocument *document) {
-    std::vector<DialectedWooWooDocument *> documents;
-    auto project = docToProject[document->documentPath.generic_string()];
-    if (projects.find(project) != projects.end()) {
-        std::unordered_map<std::string, DialectedWooWooDocument *> &pathDocMap = projects[project];
+WooWooProject *WooWooAnalyzer::getProjectByDocument(WooWooDocument * document) {
 
-        for (const auto &pair: pathDocMap) {
-            documents.emplace_back(pair.second);
-        }
-    } else {
-        // Should not ever happen; each existing WooWooDocument must be a part of project.
-        // If it is not actually part of project (determined by Woofile),
-        // it is associated an artificial project (docs without projects being grouped together)
+    for (auto &project: projects) {
+        auto doc = project->getDocument(document);
+        if (doc)
+            return project;
     }
-    return documents;
+
+    return nullptr;
 }
+
 
 void WooWooAnalyzer::handleDocumentChange(const TextDocumentIdentifier &tdi, std::string &source) {
     auto docPath = utils::uriToPathString(tdi.uri);
@@ -206,17 +189,20 @@ WorkspaceEdit WooWooAnalyzer::renameFiles(const std::vector<std::pair<std::strin
 
         if (utils::endsWith(oldPath, ".woo") && utils::endsWith(newPath, ".woo")) {
             // Handle renaming of WooWoo files within the same or to a different project
+            auto document = getDocument(oldPath);
+            auto oldProject = getProjectByDocument(document);
+            auto documentShared = oldProject->getDocumentShared(document);
+            
             std::optional<fs::path> newProjectFolder = findProjectFolder(newUri);
-            std::string oldProjectFolder = docToProject[oldPath];
-            std::string newProjectFolderPathString = newProjectFolder.has_value()
-                                                     ? newProjectFolder.value().generic_string() : "";
-
-            docToProject[newPath] = newProjectFolderPathString;
-            docToProject.erase(oldPath);
-            projects[newProjectFolderPathString][newPath] = projects[oldProjectFolder][oldPath];
-            projects[oldProjectFolder].erase(oldPath);
-            projects[newProjectFolderPathString][newPath]->documentPath = fs::path(newPath);
-
+            auto newProject = getProject(newProjectFolder);
+            if (newProject){
+                document->documentPath = newPath;
+                oldProject->deleteDocument(document);
+                newProject->addDocument(documentShared);
+            } else {
+                // TODO handle rare case
+            }
+            
             renamedDocuments.emplace_back(oldPath, newPath);
 
         } else if (utils::endsWith(oldPath, ".woo")) {
@@ -257,13 +243,10 @@ void WooWooAnalyzer::deleteDocument(const std::string &uri) {
     deleteDocument(doc);
 }
 
-void WooWooAnalyzer::deleteDocument(WooWooDocument *document) {
-    auto docPathString = document->documentPath.generic_string();
-    auto project = docToProject[docPathString];
-    docToProject.erase(docPathString);
-    projects[project].erase(docPathString);
-
-    delete document;
+void WooWooAnalyzer::deleteDocument(DialectedWooWooDocument * document) {
+    for (auto project: projects) {
+        project->deleteDocument(document);
+    }
 }
 
 
@@ -307,14 +290,26 @@ std::vector<Diagnostic> WooWooAnalyzer::diagnose(const TextDocumentIdentifier &t
 
 void WooWooAnalyzer::openDocument(const TextDocumentIdentifier &tdi) {
     auto docPath = utils::uriToPathString(tdi.uri);
-    if (!docToProject.contains(docPath)) {
+    if (!getDocument(docPath)) {
         // unknown document opened
         std::optional<fs::path> projectFolder = findProjectFolder(tdi.uri);
-        std::string projectFolderPathString = projectFolder.has_value() ? projectFolder.value().generic_string() : "";
-        loadDocument(projectFolderPathString, docPath);
+        auto project = getProject(projectFolder); 
+        if(project){
+            project->loadDocument(docPath);
+        } else {
+            // TODO handle special cases
+        }
     }
 }
 
+WooWooProject *WooWooAnalyzer::getProject(const std::optional<fs::path> &path) {
+    for (auto project : projects){
+        if(project->projectFolderPath == path){
+            return project;
+        }
+    }
+    return nullptr;
+}
 
 void WooWooAnalyzer::setTokenTypes(std::vector<std::string> tokenTypes) {
     return highlighter->setTokenTypes(std::move(tokenTypes));

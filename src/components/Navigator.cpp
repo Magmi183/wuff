@@ -87,7 +87,7 @@ void
 Navigator::searchProjectForReferences(std::vector<Location> &locations, WooWooDocument *doc, const Reference &reference,
                                       const std::string &referenceValue) {
 
-    for (auto projectDocument: analyzer->getDocumentsFromTheSameProject(doc)) {
+    for (auto projectDocument: analyzer->getProjectByDocument(doc)->getAllDocuments()) {
         for (auto refLocation: projectDocument->findLocationsOfReferences(reference, referenceValue)) {
             projectDocument->utfMappings->utf8ToUtf16(refLocation);
             locations.emplace_back(refLocation);
@@ -257,7 +257,7 @@ Location Navigator::findReference(const DefinitionParams &params, const std::vec
                                   const std::string &referencingValue) {
     auto document = analyzer->getDocumentByUri(params.textDocument.uri);
 
-    for (auto doc: analyzer->getDocumentsFromTheSameProject(document)) {
+    for (auto doc: analyzer->getProjectByDocument(document)->getAllDocuments()) {
         std::optional<std::pair<MetaContext *, TSNode>> foundRef = doc->findReferencable(possibleReferences,
                                                                                          referencingValue);
 
@@ -288,7 +288,7 @@ WorkspaceEdit Navigator::refactorDocumentReferences(const std::vector<std::pair<
         fs::path oldFileDir = oldFilePath.parent_path();
         
         // iterate over every document from the same project and look for references (from include statements)
-        for (WooWooDocument *projectDocument: analyzer->getDocumentsFromTheSameProject(renamedDoc)) {
+        for (auto projectDocument: analyzer->getProjectByDocument(renamedDoc)->getAllDocuments()) {
             TSQueryCursor *cursor = ts_query_cursor_new();
             ts_query_cursor_exec(cursor, queries[filenameQuery], ts_tree_root_node(projectDocument->tree));
             TSQueryMatch match;

@@ -52,7 +52,7 @@ void Completer::completeInclude(std::vector<CompletionItem> &completionItems, co
     std::vector<std::string> relativePaths;
     std::string currentDocDir = std::filesystem::path(document->documentPath).parent_path().string();
 
-    for (WooWooDocument *doc: analyzer->getDocumentsFromTheSameProject(document)) {
+    for (auto doc: analyzer->getProjectByDocument(document)->getAllDocuments()) {
         if (doc != nullptr && !doc->documentPath.empty()) {
             std::string relPath = std::filesystem::relative(doc->documentPath, currentDocDir).string();
             relativePaths.push_back(relPath);
@@ -125,10 +125,10 @@ void Completer::completeShorthand(std::vector<CompletionItem> &completionItems, 
 }
 
 
-void Completer::searchProjectForReferencables(std::vector<CompletionItem> &completionItems, WooWooDocument *doc,
+void Completer::searchProjectForReferencables(std::vector<CompletionItem> &completionItems, WooWooDocument * doc,
                                               std::string &referencingValue) {
 
-    for (auto projectDocument: analyzer->getDocumentsFromTheSameProject(doc)) {
+    for (auto projectDocument: analyzer->getProjectByDocument(doc)->getAllDocuments()) {
         for (auto referencable: projectDocument->getReferencablesBy(referencingValue)) {
             CompletionItem item(projectDocument->getMetaNodeText(referencable.first, referencable.second));
             completionItems.emplace_back(item);

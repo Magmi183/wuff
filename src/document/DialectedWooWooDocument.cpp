@@ -196,7 +196,7 @@ DialectedWooWooDocument::findLocationsOfReferences(const Reference &reference, c
             nodeType = ts_node_type(node);
             nodeText = getNodeText(node);
             
-            if (nodeType == "short_inner_environment") {
+            if (nodeType == "short_inner_environment"){ 
                 auto value = utils::getChildText(node, "short_inner_environment_body", this);
                 auto valueNodeOpt = utils::getChild(node, "short_inner_environment_body");
                 TSNode valueNode;

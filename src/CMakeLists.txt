@@ -64,6 +64,7 @@ pybind11_add_module(${PROJECT_NAME} NO_EXTRAS
         Bindings.cpp
         WooWooAnalyzer.cpp
         document/WooWooDocument.cpp
+        document/WooWooProject.cpp
         document/DialectedWooWooDocument.cpp
         document/MetaContext.cpp
         document/CommentLine.cpp
@@ -105,6 +106,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
             main.cpp
             WooWooAnalyzer.cpp
             document/WooWooDocument.cpp
+            document/WooWooProject.cpp
             document/DialectedWooWooDocument.cpp
             document/MetaContext.cpp
             document/CommentLine.cpp
