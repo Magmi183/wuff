@@ -10,10 +10,10 @@
 #include <string>
 #include <unordered_map>
 #include <pybind11/pytypes.h>
-#include "document/DialectedWooWooDocument.h"
+#include "project/DialectedWooWooDocument.h"
 #include "parser/Parser.h"
 #include "lsp/LSPTypes.h"
-#include "document/WooWooProject.h"
+#include "project/WooWooProject.h"
 
 class Hoverer;
 class Highlighter;

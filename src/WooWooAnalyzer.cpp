@@ -8,7 +8,7 @@
 
 #include "WooWooAnalyzer.h"
 #include "dialect/DialectManager.h"
-#include "document/DialectedWooWooDocument.h"
+#include "project/DialectedWooWooDocument.h"
 
 #include "components/Hoverer.h"
 #include "components/Highlighter.h"

@@ -8,7 +8,7 @@
 #include <iostream>
 #include <tree_sitter/api.h>
 
-#include "../document/WooWooDocument.h"
+#include "../project/WooWooDocument.h"
 
 
 namespace utils {

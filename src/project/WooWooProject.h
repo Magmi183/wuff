@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <filesystem>
 #include "DialectedWooWooDocument.h"
+#include "Woofile.h"
 
 namespace fs = std::filesystem;
 
@@ -17,6 +18,7 @@ class WooWooProject {
 private:
     std::unordered_map<std::string, std::shared_ptr<DialectedWooWooDocument>> documents;
 public:
+    Woofile * woofile;
     std::optional<fs::path> projectFolderPath;
     WooWooProject();
     WooWooProject(const fs::path & projectFolderPath);

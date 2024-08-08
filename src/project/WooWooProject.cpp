@@ -11,6 +11,8 @@ WooWooProject::WooWooProject() : projectFolderPath(std::nullopt) {}
 
 WooWooProject::WooWooProject(const fs::path &projectFolderPath) : projectFolderPath(projectFolderPath) {
 
+    woofile = new Woofile(projectFolderPath);
+    
     for (const auto &entry: fs::recursive_directory_iterator(projectFolderPath)) {
         if (entry.is_regular_file() && entry.path().extension() == ".woo") {
             loadDocument(entry.path());

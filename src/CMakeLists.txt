@@ -63,12 +63,13 @@ pybind11_add_module(${PROJECT_NAME} NO_EXTRAS
         ${YAML_SCANNER_SRC}
         Bindings.cpp
         WooWooAnalyzer.cpp
-        document/WooWooDocument.cpp
-        document/WooWooProject.cpp
-        document/DialectedWooWooDocument.cpp
-        document/MetaContext.cpp
-        document/CommentLine.cpp
-        document/UTF8toUTF16Mapping.cpp
+        project/WooWooDocument.cpp
+        project/WooWooProject.cpp
+        project/DialectedWooWooDocument.cpp
+        project/MetaContext.cpp
+        project/CommentLine.cpp
+        project/UTF8toUTF16Mapping.cpp
+        project/Woofile.cpp
         dialect/DialectManager.cpp
         dialect/DocumentPart.cpp
         dialect/Dialect.cpp
@@ -105,12 +106,13 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
             ${YAML_SCANNER_SRC}
             main.cpp
             WooWooAnalyzer.cpp
-            document/WooWooDocument.cpp
-            document/WooWooProject.cpp
-            document/DialectedWooWooDocument.cpp
-            document/MetaContext.cpp
-            document/CommentLine.cpp
-            document/UTF8toUTF16Mapping.cpp
+            project/WooWooDocument.cpp
+            project/WooWooProject.cpp
+            project/DialectedWooWooDocument.cpp
+            project/MetaContext.cpp
+            project/CommentLine.cpp
+            project/UTF8toUTF16Mapping.cpp
+            project/Woofile.cpp
             dialect/DialectManager.cpp
             dialect/DocumentPart.cpp
             dialect/Dialect.cpp
