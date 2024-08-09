@@ -45,6 +45,9 @@ set(WOOWOO_SCANNER_SRC tree-sitter/woowoo/scanner.cc)
 set(YAML_PARSER_SRC tree-sitter/yaml/parser.c)
 set(YAML_SCANNER_SRC tree-sitter/yaml/scanner.cc)
 
+# Tree-Sitter BibTeX
+set(BIBTEX_PARSER_SRC tree-sitter/bibtex/parser.c)
+
 # - - - - -
 
 FetchContent_Declare(
@@ -61,6 +64,7 @@ pybind11_add_module(${PROJECT_NAME} NO_EXTRAS
         ${WOOWOO_SCANNER_SRC}
         ${YAML_PARSER_SRC}
         ${YAML_SCANNER_SRC}
+        ${BIBTEX_PARSER_SRC}
         Bindings.cpp
         WooWooAnalyzer.cpp
         project/WooWooDocument.cpp
@@ -104,6 +108,7 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
             ${WOOWOO_SCANNER_SRC}
             ${YAML_PARSER_SRC}
             ${YAML_SCANNER_SRC}
+            ${BIBTEX_PARSER_SRC}
             main.cpp
             WooWooAnalyzer.cpp
             project/WooWooDocument.cpp

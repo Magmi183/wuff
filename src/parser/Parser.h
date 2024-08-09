@@ -15,12 +15,14 @@
 
 extern "C" TSLanguage* tree_sitter_woowoo();
 extern "C" TSLanguage* tree_sitter_yaml();
+extern "C" TSLanguage* tree_sitter_bibtex();
 
 class Parser {
 public:
     ~Parser();
     TSTree* parseWooWoo(const std::string& source);
     TSTree* parseYaml(const std::string& source);
+    TSTree* parseBibTeX(const std::string& source);
     std::vector<MetaContext *> parseMetas(TSTree * WooWooTree, const std::string& source);
     static Parser * getInstance();
 
@@ -31,6 +33,7 @@ private:
 
     TSParser* WooWooParser;
     TSParser* YAMLParser;
+    TSParser* BibTeXParser;
     
     void prepareQueries();
     TSQuery * metaBlocksQuery;

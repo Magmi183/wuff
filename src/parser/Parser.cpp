@@ -18,15 +18,17 @@ Parser* Parser::getInstance() {
 }
 
 
-Parser::Parser() : WooWooParser(ts_parser_new()), YAMLParser(ts_parser_new()) {
+Parser::Parser() : WooWooParser(ts_parser_new()), YAMLParser(ts_parser_new()), BibTeXParser(ts_parser_new()) {
     ts_parser_set_language(WooWooParser, tree_sitter_woowoo());
     ts_parser_set_language(YAMLParser, tree_sitter_yaml());
+    ts_parser_set_language(BibTeXParser, tree_sitter_bibtex());
     prepareQueries();
 }
 
 Parser::~Parser() {
     ts_parser_delete(WooWooParser);
     ts_parser_delete(YAMLParser);
+    ts_parser_delete(BibTeXParser);
     ts_query_delete(metaBlocksQuery);
 }
 
@@ -87,6 +89,11 @@ TSTree *Parser::parseWooWoo(const std::string &source) {
 
 TSTree *Parser::parseYaml(const std::string &source) {
     auto tree = ts_parser_parse_string(YAMLParser, nullptr, source.c_str(), source.length());
+    return tree;
+}
+
+TSTree * Parser::parseBibTeX(const std::string &source) {
+    auto tree = ts_parser_parse_string(BibTeXParser, nullptr, source.c_str(), source.length());
     return tree;
 }
 
